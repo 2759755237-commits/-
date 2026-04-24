@@ -131,7 +131,7 @@
     <div class="card full-width">
         <div class="card-label" style="justify-content: space-between;">
             <span>🔥 实时热榜资讯</span>
-            <span id="news-source" style="font-weight: normal; color: #f59e0b;">📡 正在扫描可用节点...</span>
+            <span id="news-source" style="font-weight: normal; color: #f59e0b;">📡 扫描国内节点中...</span>
         </div>
         <div id="news-list" class="news-grid">
             <div style="padding: 30px; text-align: center; color: var(--text-sub); grid-column: 1 / -1;">
@@ -175,7 +175,7 @@
 
     // 3. 黄历
     function initLuck() {
-        const yis = ["专注工作", "学习充电", "深度阅读", "整理桌面", "好好学习"];
+        const yis = ["专注工作", "学习充电", "深度阅读", "整理桌面", "联系老友"];
         const jis = ["过度熬夜", "冲动消费", "久坐不动", "暴饮暴食", "情绪化"];
         const d = new Date().getDate();
         document.getElementById('yi-text').innerText = yis[d % yis.length];
@@ -183,53 +183,47 @@
     }
     initLuck();
 
-    // 4. 彻底重构的新闻多节点引擎
+    // 4. 纯国内节点新闻拉取 (增加强力可选链保护)
     async function fetchNews() {
         const list = document.getElementById('news-list');
         const sourceLabel = document.getElementById('news-source');
         
-        // 节点阵列：从聚合 API 到 强力穿透代理
+        // 节点阵列：全面替换为国内稳定线路
         const apis = [
-            // 节点1：国内某高校公益接口（极速，但偶尔挂）
             { 
-                name: '微博热搜 (国内节点)', 
-                url: 'https://v.api.aa1.cn/api/weibo-rs/', 
-                getList: d => d.data ? d.data.map(i => ({title: i.title, url: i.url})) : null 
+                name: '知乎热榜 (国内主线)', 
+                url: 'https://api.oioweb.cn/api/common/ZhihuHot', 
+                getList: d => d?.result?.map(i => ({title: i.title, url: i.url})) 
             },
-            // 节点2：国内 Vvhan 备用
             { 
-                name: '知乎热榜 (备用节点)', 
-                url: 'https://api.vvhan.com/api/hotlist/zhiHu', 
-                getList: d => d.data ? d.data.map(i => ({title: i.title, url: i.url})) : null 
+                name: '百度热搜 (国内备线1)', 
+                url: 'https://api.vvhan.com/api/hotlist/baiduRD', 
+                getList: d => d?.data?.map(i => ({title: i.title, url: i.url})) 
             },
-            // 节点3：【终极杀手锏】通过全球免费 CORS 代理直连百度官方接口！
             { 
-                name: '百度实时热点 (代理穿透)', 
-                url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://top.baidu.com/api/board?platform=pc&tab=realtime'), 
-                getList: d => (d.data && d.data.cards && d.data.cards[0].content) ? d.data.cards[0].content.map(i => ({title: i.word, url: i.url})) : null 
+                name: '微博热搜 (国内备线2)', 
+                url: 'https://tenapi.cn/v2/weibohot', 
+                getList: d => d?.data?.map(i => ({title: i.name, url: i.url})) 
             }
         ];
 
         for (let api of apis) {
             try {
-                // 每条线路只给 3 秒时间，不通立刻换下一条
+                // 每条线路给 4 秒时间
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
                 
                 const res = await fetch(api.url, { signal: controller.signal });
                 clearTimeout(timeoutId);
                 
-                // 将响应转化为JSON处理
-                const text = await res.text();
-                const data = JSON.parse(text);
+                const data = await res.json();
                 const items = api.getList(data);
 
                 if (items && items.length > 0) {
                     list.innerHTML = ''; 
                     sourceLabel.innerText = `🟢 已连接: ${api.name}`;
-                    sourceLabel.style.color = "#10b981"; // 绿色
+                    sourceLabel.style.color = "#10b981";
                     
-                    // 渲染前 10 条
                     items.slice(0, 10).forEach((item, index) => {
                         let rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : 'rank-other';
                         list.innerHTML += `
@@ -239,14 +233,14 @@
                             </a>
                         `;
                     });
-                    return; // 搞定一条就直接撤退，不再请求后续节点
+                    return; 
                 }
             } catch (e) {
-                console.warn(`${api.name} 节点拥堵，自动切换...`);
+                console.warn(`${api.name} 拉取失败，尝试下一个...`);
             }
         }
 
-        // 如果连终极穿透代理都被你当前的网络拦截了，优雅降级：
+        // 终极降级
         sourceLabel.innerText = "🔴 本地网络受限";
         sourceLabel.style.color = "#ef4444";
         list.style.display = "block";
