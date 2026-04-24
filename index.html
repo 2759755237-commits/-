@@ -27,7 +27,6 @@
             background-color: #70c5ce; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             overflow: hidden;
-            /* 确保整个容器都能响应点击 */
             cursor: pointer;
         }
 
@@ -71,7 +70,6 @@
             display: none; 
             transform: translateY(20px);
             animation: popUp 0.3s forwards;
-            /* 防止面板点击事件穿透到游戏 */
             pointer-events: auto;
         }
 
@@ -129,7 +127,7 @@
                     <div class="score-label" style="margin-top: 10px;">BEST</div>
                     <div class="score-number" id="best-score">0</div>
                 </div>
-                <button class="play-btn" onclick="resetGame(event)">PLAY AGAIN</button>
+                <button class="play-btn" onclick="resetGame(event)" ontouchstart="resetGame(event)">PLAY AGAIN</button>
             </div>
         </div>
     </div>
@@ -140,7 +138,7 @@
         const currentScoreEl = document.getElementById('current-score');
         const startScreen = document.getElementById('start-screen');
         const gameOverScreen = document.getElementById('game-over-screen');
-        const container = document.getElementById('game-container'); // 获取顶层容器
+        const container = document.getElementById('game-container');
 
         let scale = 1;
         function resize() {
@@ -287,7 +285,6 @@
 
         const bg = {
             groundX: 0,
-            cityX: 0,
             draw() {
                 ctx.fillStyle = '#d0f4f7'; 
                 ctx.fillRect(0, canvas.height - 150, canvas.width, 50);
@@ -331,9 +328,13 @@
             setTimeout(() => { gameOverScreen.style.display = 'flex'; }, 300); 
         }
 
-        // 增加了参数 e 阻止事件冒泡，防止点完重新开始立刻跳跃
+        // 彻底修复：点击按钮重置游戏
         function resetGame(e) {
-            if(e) e.stopPropagation(); 
+            if(e) {
+                e.stopPropagation(); 
+                // 仅在手机触摸时阻止默认事件，防止在安卓上同时触发 touch 和 click 导致执行两次
+                if(e.type === 'touchstart') e.preventDefault();
+            }
             bird.y = canvas.height / 2;
             bird.velocity = 0;
             bird.rotation = 0;
@@ -373,12 +374,14 @@
             requestAnimationFrame(loop);
         }
 
-        // 统一优化的事件处理逻辑
+        // --- 核心修复区：放开对按钮的点击拦截 ---
         function action(e) {
-            // 如果是键盘按键，但不是空格，则忽略
+            // 如果用户点击的是 "PLAY AGAIN" 按钮，直接让浏览器去触发按钮自己的事件，游戏画面不要拦截
+            if (e.target.tagName === 'BUTTON') return;
+
             if (e.type === 'keydown' && e.code !== 'Space') return;
             
-            // 阻止手机端多余的默认行为（滑动、双击放大等）
+            // 拦截背景的触摸，防止页面跟着手势上下滑
             if (e.cancelable && (e.type === 'touchstart' || e.code === 'Space')) {
                 e.preventDefault();
             }
@@ -392,7 +395,6 @@
             }
         }
 
-        // 核心修复点：将监听器绑定在最外层的 container 身上，完美接收手机触摸
         window.addEventListener('keydown', action);
         container.addEventListener('mousedown', action);
         container.addEventListener('touchstart', action, { passive: false });
