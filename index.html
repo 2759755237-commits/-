@@ -3,106 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>飞翔的小鸟 - 精致重制版</title>
+    <title>海克斯飞鸟 - 科技强化版</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
 
         body {
-            background-color: #2c3e50;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            background-color: #1a1a2e; /* 替换为更暗的宇宙蓝底色 */
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             touch-action: none; 
         }
 
         #game-container {
-            position: relative;
-            width: 100%;
-            max-width: 420px; 
-            height: 100%;
-            max-height: 750px;
-            background-color: #70c5ce; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            overflow: hidden;
-            cursor: pointer;
+            position: relative; width: 100%; max-width: 420px; height: 100%; max-height: 750px;
+            background-color: #70c5ce; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            overflow: hidden; cursor: pointer;
         }
 
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
+        canvas { display: block; width: 100%; height: 100%; }
 
         .ui-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 10;
         }
 
         .score-board {
-            position: absolute;
-            top: 10%;
-            width: 100%;
-            text-align: center;
-            font-size: 50px;
-            font-weight: 900;
-            color: #fff;
-            -webkit-text-stroke: 2px #543847; 
-            text-shadow: 2px 2px 0 #543847, 0 4px 10px rgba(0,0,0,0.3);
-            z-index: 5;
-            pointer-events: none;
+            position: absolute; top: 10%; width: 100%; text-align: center;
+            font-size: 50px; font-weight: 900; color: #fff;
+            -webkit-text-stroke: 2px #543847; text-shadow: 2px 2px 0 #543847, 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 5; pointer-events: none;
         }
 
+        /* 结算面板 */
         .game-over-panel {
-            background: #ded895;
-            border: 3px solid #543847;
-            border-radius: 10px;
-            padding: 20px 30px;
-            text-align: center;
-            box-shadow: 0 8px 0 rgba(0,0,0,0.2);
-            display: none; 
-            transform: translateY(20px);
-            animation: popUp 0.3s forwards;
-            pointer-events: auto;
+            background: #ded895; border: 3px solid #543847; border-radius: 10px;
+            padding: 20px 30px; text-align: center; box-shadow: 0 8px 0 rgba(0,0,0,0.2);
+            display: none; transform: translateY(20px); animation: popUp 0.3s forwards; pointer-events: auto;
         }
-
-        @keyframes popUp {
-            to { transform: translateY(0); }
-        }
-
+        @keyframes popUp { to { transform: translateY(0); } }
         .panel-title { color: #f26d21; font-size: 28px; font-weight: 900; -webkit-text-stroke: 1px #fff; margin-bottom: 15px; }
         .score-box { background: #ceb572; border-radius: 5px; padding: 10px; margin-bottom: 15px; border: 2px solid #a98547;}
         .score-label { color: #543847; font-size: 14px; font-weight: bold; }
         .score-number { color: #fff; font-size: 32px; font-weight: 900; -webkit-text-stroke: 1px #543847; }
-        
         .play-btn {
-            background: #f26d21;
-            border: 2px solid #fff;
-            color: #fff;
-            font-size: 18px;
-            font-weight: bold;
-            padding: 10px 30px;
-            border-radius: 30px;
-            cursor: pointer;
-            box-shadow: 0 4px 0 #cf5511;
-            transition: 0.1s;
+            background: #f26d21; border: 2px solid #fff; color: #fff; font-size: 18px; font-weight: bold;
+            padding: 10px 30px; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 0 #cf5511; transition: 0.1s;
         }
         .play-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #cf5511; }
 
-        .ready-msg {
-            color: #fff; font-size: 24px; font-weight: bold;
-            -webkit-text-stroke: 1px #543847;
-            text-align: center;
-            animation: blink 1s infinite;
-        }
+        .ready-msg { color: #fff; font-size: 24px; font-weight: bold; -webkit-text-stroke: 1px #543847; text-align: center; animation: blink 1s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* --- 海克斯科技面板样式 --- */
+        #hextech-screen {
+            background: rgba(10, 15, 30, 0.85);
+            backdrop-filter: blur(5px);
+            display: none; 
+            padding: 20px;
+            pointer-events: auto; /* 允许点击 */
+        }
+        .hex-title {
+            color: #00ffcc; font-size: 24px; font-weight: 900; margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(0,255,204,0.5); letter-spacing: 2px;
+        }
+        .hex-container {
+            display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 320px;
+        }
+        .hex-card {
+            background: linear-gradient(135deg, rgba(30, 40, 60, 0.9) 0%, rgba(15, 20, 35, 0.9) 100%);
+            border: 2px solid #c5a059; /* 海克斯金 */
+            border-radius: 12px; padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 0 10px rgba(197, 160, 89, 0.2);
+            color: white; cursor: pointer; transition: 0.2s;
+            position: relative; overflow: hidden;
+        }
+        .hex-card::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg); transition: 0.5s; opacity: 0;
+        }
+        .hex-card:hover { transform: scale(1.02); border-color: #fce78b; box-shadow: 0 0 20px rgba(197, 160, 89, 0.6); }
+        .hex-card:hover::before { left: 100%; opacity: 1; }
+        .hex-card:active { transform: scale(0.98); }
+        
+        .hex-name { color: #fce78b; font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+        .hex-desc { color: #a0b0c0; font-size: 13px; line-height: 1.4; }
 
     </style>
 </head>
@@ -115,7 +102,13 @@
 
         <div class="ui-layer" id="start-screen">
             <div style="font-size: 40px; color: #fff; font-weight: 900; -webkit-text-stroke: 2px #543847; margin-bottom: 50px;">Flappy Bird</div>
-            <div class="ready-msg">点击屏幕<br>或按空格开始</div>
+            <div class="ready-msg">点击屏幕<br>选取海克斯强化</div>
+        </div>
+
+        <div class="ui-layer" id="hextech-screen">
+            <div class="hex-title">✦ 选取海克斯强化 ✦</div>
+            <div class="hex-container" id="hex-container">
+                </div>
         </div>
 
         <div class="ui-layer" id="game-over-screen" style="display: none; background: rgba(0,0,0,0.4);">
@@ -135,12 +128,13 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const container = document.getElementById('game-container');
         const currentScoreEl = document.getElementById('current-score');
         const startScreen = document.getElementById('start-screen');
         const gameOverScreen = document.getElementById('game-over-screen');
-        const container = document.getElementById('game-container');
+        const hexScreen = document.getElementById('hextech-screen');
+        const hexContainer = document.getElementById('hex-container');
 
-        let scale = 1;
         function resize() {
             canvas.width = container.clientWidth;
             canvas.height = container.clientHeight;
@@ -148,20 +142,78 @@
         window.addEventListener('resize', resize);
         resize();
 
+        // 基础参数配置 (用于每次死后重置)
+        const BASE_GRAVITY = 0.25;
+        const BASE_JUMP = -5.5;
+        const BASE_SPEED = 2.5;
+        const BASE_RADIUS = 12;
+        const BASE_GAP = 130;
+
+        // 当前动态参数
         let frames = 0;
         let score = 0;
-        let bestScore = localStorage.getItem('flappyBest') || 0;
-        let gameState = 'START'; 
+        let bestScore = localStorage.getItem('flappyHexBest') || 0;
+        let gameState = 'START'; // START, HEXTECH, PLAYING, GAMEOVER
         
-        const gravity = 0.25;
-        const jumpStrength = -5.5;
-        const speed = 2.5;
+        let sys = {
+            gravity: BASE_GRAVITY,
+            jumpStrength: BASE_JUMP,
+            speed: BASE_SPEED,
+            gap: BASE_GAP,
+            scoreMult: 1,
+            shield: 0
+        };
+
+        // --- 海克斯科技图鉴 ---
+        const AUGMENTS = [
+            { id: 'feather', icon: '🪶', name: '羽毛轻盈', desc: '小鸟受到的重力降低 20%，手感更飘逸。', apply: () => sys.gravity *= 0.8 },
+            { id: 'shield', icon: '🛡️', name: '钢铁之翼', desc: '获得一层护盾。首次撞击水管时免死并撞碎该水管。', apply: () => sys.shield = 1 },
+            { id: 'slow', icon: '⏳', name: '时空裂隙', desc: '水管移动速度降低 20%，给你更多反应时间。', apply: () => sys.speed *= 0.8 },
+            { id: 'greed', icon: '💰', name: '贪婪之手', desc: '每次穿过水管获得 2 分。', apply: () => sys.scoreMult = 2 },
+            { id: 'slim', icon: '🏃', name: '苗条身材', desc: '小鸟的碰撞体积缩小 20%，更容易穿过极限缝隙。', apply: () => bird.radius *= 0.8 },
+            { id: 'jump', icon: '🚀', name: '强健体魄', desc: '跳跃力度增加 15%。', apply: () => sys.jumpStrength *= 1.15 },
+            { id: 'wide', icon: '🛣️', name: '宽阔航道', desc: '上下水管的间距拉大 25%。', apply: () => sys.gap *= 1.25 },
+            { id: 'headstart', icon: '🎁', name: '抢占先机', desc: '开局直接获得 5 分。', apply: () => { score = 5; currentScoreEl.innerText = score; } }
+        ];
+
+        let currentChoices = [];
+
+        // 触发海克斯选择界面
+        function triggerHextech() {
+            gameState = 'HEXTECH';
+            startScreen.style.display = 'none';
+            hexScreen.style.display = 'flex';
+            
+            // 随机抽取3个不重复的
+            const shuffled = [...AUGMENTS].sort(() => 0.5 - Math.random());
+            currentChoices = shuffled.slice(0, 3);
+            
+            hexContainer.innerHTML = '';
+            currentChoices.forEach((aug, index) => {
+                const card = document.createElement('div');
+                card.className = 'hex-card';
+                card.innerHTML = `<div class="hex-name">${aug.icon} ${aug.name}</div><div class="hex-desc">${aug.desc}</div>`;
+                // 绑定点击和触摸事件
+                card.onclick = (e) => selectAugment(index, e);
+                card.ontouchstart = (e) => { e.preventDefault(); selectAugment(index, e); };
+                hexContainer.appendChild(card);
+            });
+        }
+
+        // 选定海克斯
+        function selectAugment(index, e) {
+            e.stopPropagation(); // 阻止事件冒泡到外层引起跳跃
+            currentChoices[index].apply(); // 激活效果
+            
+            hexScreen.style.display = 'none';
+            gameState = 'PLAYING';
+            bird.flap(); // 起飞
+        }
 
         const bird = {
-            x: 50, y: 150, radius: 12,
+            x: 50, y: 150, radius: BASE_RADIUS,
             velocity: 0, rotation: 0,
-            wingPhase: 0,
-
+            
             draw() {
                 ctx.save();
                 ctx.translate(this.x, this.y);
@@ -169,6 +221,15 @@
                 this.rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, (this.velocity * 0.1)));
                 if(gameState === 'GAMEOVER') this.rotation = Math.PI / 2; 
                 ctx.rotate(this.rotation);
+
+                // 如果有护盾，画一个科技光环
+                if (sys.shield > 0) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius + 6, 0, Math.PI*2);
+                    ctx.fillStyle = 'rgba(0, 255, 204, 0.3)';
+                    ctx.fill();
+                    ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(0, 255, 204, 0.8)'; ctx.stroke();
+                }
 
                 ctx.fillStyle = '#f4ce42';
                 ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill();
@@ -194,7 +255,7 @@
             },
 
             update() {
-                this.velocity += gravity;
+                this.velocity += sys.gravity;
                 this.y += this.velocity;
 
                 if (this.y + this.radius >= canvas.height - 100) {
@@ -207,30 +268,21 @@
                 }
             },
 
-            flap() {
-                this.velocity = jumpStrength;
-            }
+            flap() { this.velocity = sys.jumpStrength; }
         };
 
         const pipes = {
             list: [],
             width: 50,
-            gap: 130, 
 
             draw() {
                 for (let p of this.list) {
-                    const capHeight = 20;
-                    const capOut = 4; 
-                    
+                    const capHeight = 20; const capOut = 4; 
                     const drawCylinder = (x, y, w, h) => {
-                        ctx.fillStyle = '#73bf2e'; 
-                        ctx.fillRect(x, y, w, h);
-                        ctx.fillStyle = '#9cce59';
-                        ctx.fillRect(x + 5, y, 5, h);
-                        ctx.fillStyle = '#558022';
-                        ctx.fillRect(x + w - 10, y, 10, h);
-                        ctx.lineWidth = 2; ctx.strokeStyle = '#543847';
-                        ctx.strokeRect(x, y, w, h);
+                        ctx.fillStyle = '#73bf2e'; ctx.fillRect(x, y, w, h);
+                        ctx.fillStyle = '#9cce59'; ctx.fillRect(x + 5, y, 5, h);
+                        ctx.fillStyle = '#558022'; ctx.fillRect(x + w - 10, y, 10, h);
+                        ctx.lineWidth = 2; ctx.strokeStyle = '#543847'; ctx.strokeRect(x, y, w, h);
                     };
 
                     drawCylinder(p.x, 0, this.width, p.top);
@@ -245,38 +297,50 @@
             update() {
                 if (frames % 90 === 0) {
                     let minHeight = 50;
-                    let maxPos = canvas.height - 100 - minHeight - this.gap;
+                    let maxPos = canvas.height - 100 - minHeight - sys.gap;
                     let topHeight = Math.max(minHeight, Math.random() * maxPos);
                     
                     this.list.push({
                         x: canvas.width,
                         top: topHeight,
-                        bottom: canvas.height - 100 - (topHeight + this.gap),
+                        bottom: canvas.height - 100 - (topHeight + sys.gap),
                         passed: false
                     });
                 }
 
                 for (let i = 0; i < this.list.length; i++) {
                     let p = this.list[i];
-                    p.x -= speed;
+                    p.x -= sys.speed;
 
-                    let birdHitbox = { x: bird.x - bird.radius + 4, y: bird.y - bird.radius + 4, w: bird.radius*2 - 8, h: bird.radius*2 - 8 };
+                    // 缩小一点点碰撞体积判定，让手感更好
+                    let hitbox = { x: bird.x - bird.radius + 3, y: bird.y - bird.radius + 3, w: bird.radius*2 - 6, h: bird.radius*2 - 6 };
                     
-                    if (birdHitbox.x + birdHitbox.w > p.x && birdHitbox.x < p.x + this.width) {
-                        if (birdHitbox.y < p.top || birdHitbox.y + birdHitbox.h > canvas.height - 100 - p.bottom) {
-                            gameOver();
+                    // 碰撞检测
+                    if (hitbox.x + hitbox.w > p.x && hitbox.x < p.x + this.width) {
+                        if (hitbox.y < p.top || hitbox.y + hitbox.h > canvas.height - 100 - p.bottom) {
+                            
+                            // 护盾抵消伤害逻辑
+                            if (sys.shield > 0) {
+                                sys.shield--;
+                                this.list.splice(i, 1); // 撞碎这根管子
+                                i--;
+                                // 产生一个向后的击退效果
+                                bird.velocity = sys.jumpStrength * 0.5;
+                                continue;
+                            } else {
+                                gameOver();
+                            }
                         }
                     }
 
                     if (p.x + this.width < bird.x && !p.passed) {
-                        score++;
+                        score += sys.scoreMult; // 根据海克斯倍率加分
                         currentScoreEl.innerText = score;
                         p.passed = true;
                     }
 
                     if (p.x + this.width < 0) {
-                        this.list.shift();
-                        i--;
+                        this.list.shift(); i--;
                     }
                 }
             },
@@ -286,18 +350,13 @@
         const bg = {
             groundX: 0,
             draw() {
-                ctx.fillStyle = '#d0f4f7'; 
-                ctx.fillRect(0, canvas.height - 150, canvas.width, 50);
-                
-                ctx.fillStyle = '#ded895';
-                ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
-                ctx.fillStyle = '#73bf2e';
-                ctx.fillRect(0, canvas.height - 100, canvas.width, 15);
+                ctx.fillStyle = '#d0f4f7'; ctx.fillRect(0, canvas.height - 150, canvas.width, 50);
+                ctx.fillStyle = '#ded895'; ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+                ctx.fillStyle = '#73bf2e'; ctx.fillRect(0, canvas.height - 100, canvas.width, 15);
                 ctx.lineWidth = 2; ctx.strokeStyle = '#543847';
                 ctx.beginPath(); ctx.moveTo(0, canvas.height - 100); ctx.lineTo(canvas.width, canvas.height - 100); ctx.stroke();
 
-                ctx.strokeStyle = '#c6bc5b';
-                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#c6bc5b'; ctx.lineWidth = 3;
                 for (let i = 0; i < canvas.width + 50; i += 30) {
                     ctx.beginPath();
                     ctx.moveTo(i + this.groundX, canvas.height - 85);
@@ -305,11 +364,7 @@
                     ctx.stroke();
                 }
             },
-            update() {
-                if(gameState === 'PLAYING') {
-                    this.groundX = (this.groundX - speed) % 30; 
-                }
-            }
+            update() { if(gameState === 'PLAYING') this.groundX = (this.groundX - sys.speed) % 30; }
         };
 
         function gameOver() {
@@ -318,7 +373,7 @@
             
             if (score > bestScore) {
                 bestScore = score;
-                localStorage.setItem('flappyBest', bestScore);
+                localStorage.setItem('flappyHexBest', bestScore);
             }
             
             document.getElementById('final-score').innerText = score;
@@ -328,19 +383,25 @@
             setTimeout(() => { gameOverScreen.style.display = 'flex'; }, 300); 
         }
 
-        // 彻底修复：点击按钮重置游戏
         function resetGame(e) {
-            if(e) {
-                e.stopPropagation(); 
-                // 仅在手机触摸时阻止默认事件，防止在安卓上同时触发 touch 和 click 导致执行两次
-                if(e.type === 'touchstart') e.preventDefault();
-            }
+            if(e) { e.stopPropagation(); if(e.type === 'touchstart') e.preventDefault(); }
+            
+            // 彻底还原基础系统参数，清除上一把的海克斯效果
+            sys.gravity = BASE_GRAVITY;
+            sys.jumpStrength = BASE_JUMP;
+            sys.speed = BASE_SPEED;
+            sys.gap = BASE_GAP;
+            sys.scoreMult = 1;
+            sys.shield = 0;
+            bird.radius = BASE_RADIUS;
+
             bird.y = canvas.height / 2;
             bird.velocity = 0;
             bird.rotation = 0;
             pipes.reset();
             score = 0;
             frames = 0;
+            
             currentScoreEl.innerText = score;
             currentScoreEl.style.display = 'block';
             gameOverScreen.style.display = 'none';
@@ -350,46 +411,30 @@
 
         function loop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            bg.update();
-            bg.draw();
-            
-            pipes.draw();
-            bird.draw();
+            bg.update(); bg.draw();
+            pipes.draw(); bird.draw();
 
             if (gameState === 'PLAYING') {
-                pipes.update();
-                bird.update();
-                frames++;
+                pipes.update(); bird.update(); frames++;
             } else if (gameState === 'GAMEOVER') {
                 if (bird.y + bird.radius < canvas.height - 100) {
-                    bird.velocity += gravity * 1.5;
-                    bird.y += bird.velocity;
+                    bird.velocity += sys.gravity * 1.5; bird.y += bird.velocity;
                 }
-            } else if (gameState === 'START') {
+            } else if (gameState === 'START' || gameState === 'HEXTECH') {
                 bird.y = (canvas.height / 2) + Math.sin(frames * 0.05) * 5;
                 frames++;
             }
-
             requestAnimationFrame(loop);
         }
 
-        // --- 核心修复区：放开对按钮的点击拦截 ---
+        // 统一控制分发
         function action(e) {
-            // 如果用户点击的是 "PLAY AGAIN" 按钮，直接让浏览器去触发按钮自己的事件，游戏画面不要拦截
-            if (e.target.tagName === 'BUTTON') return;
-
+            if (e.target.tagName === 'BUTTON' || e.target.closest('.hex-card')) return; // 放过按钮和海克斯卡片
             if (e.type === 'keydown' && e.code !== 'Space') return;
-            
-            // 拦截背景的触摸，防止页面跟着手势上下滑
-            if (e.cancelable && (e.type === 'touchstart' || e.code === 'Space')) {
-                e.preventDefault();
-            }
+            if (e.cancelable && (e.type === 'touchstart' || e.code === 'Space')) e.preventDefault();
             
             if (gameState === 'START') {
-                gameState = 'PLAYING';
-                startScreen.style.display = 'none';
-                bird.flap();
+                triggerHextech(); // 开局不直接起飞，而是切入海克斯界面
             } else if (gameState === 'PLAYING') {
                 bird.flap();
             }
