@@ -6,13 +6,13 @@
     <title>私人数据中心</title>
     <style>
         :root {
-            --bg: #0f172a;           /* 深邃蓝背景 */
-            --card-bg: #1e293b;      /* 卡片底色 */
-            --card-border: #334155;  /* 卡片边框 */
-            --text-main: #f8fafc;    /* 主文本 */
-            --text-sub: #94a3b8;     /* 副文本 */
-            --accent: #3b82f6;       /* 主题蓝 */
-            --rank-1: #ef4444;       /* 热搜前三颜色 */
+            --bg: #0f172a;           
+            --card-bg: #1e293b;      
+            --card-border: #334155;  
+            --text-main: #f8fafc;    
+            --text-sub: #94a3b8;     
+            --accent: #3b82f6;       
+            --rank-1: #ef4444;       
             --rank-2: #f97316;
             --rank-3: #eab308;
             --rank-other: #64748b;
@@ -26,11 +26,10 @@
             font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
             min-height: 100vh;
             padding: 20px 10px;
-            overflow-y: auto; /* 确保手机端可以上下滚动 */
+            overflow-y: auto; 
             line-height: 1.5;
         }
 
-        /* 核心网格布局：PC端并排，手机端堆叠 */
         .container {
             width: 100%;
             max-width: 1000px;
@@ -40,7 +39,7 @@
             gap: 20px;
         }
 
-        .full-width { grid-column: 1 / -1; } /* 占满整行 */
+        .full-width { grid-column: 1 / -1; } 
 
         .card {
             background: var(--card-bg);
@@ -63,22 +62,18 @@
             align-items: center;
         }
 
-        /* 时间模块 */
         .time-box { text-align: center; padding: 30px 0; background: transparent; border: none; box-shadow: none; }
         #time { font-size: clamp(60px, 8vw, 80px); font-weight: 800; letter-spacing: 2px; text-shadow: 0 4px 12px rgba(0,0,0,0.3); }
         #date { font-size: 18px; color: var(--accent); font-weight: 500; margin-top: 8px; }
 
-        /* 天气模块 */
         .weather-content { display: flex; justify-content: space-between; align-items: center; }
         .temp { font-size: 56px; font-weight: 300; line-height: 1; }
         .city { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
 
-        /* 黄历模块 */
         .luck-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
         .luck-badge { padding: 4px 10px; border-radius: 8px; font-size: 13px; font-weight: bold; color: #fff; }
         .yi { background: #10b981; } .ji { background: #ef4444; }
         
-        /* 新闻模块 (PC端双列，手机端单列) */
         .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
         .news-item {
             display: flex; gap: 12px; padding: 12px 16px;
@@ -94,7 +89,6 @@
         .rank-1 { color: var(--rank-1); } .rank-2 { color: var(--rank-2); } .rank-3 { color: var(--rank-3); }
         .rank-other { color: var(--rank-other); }
 
-        /* 降级UI：快捷按钮 */
         .fallback-container { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
         .fallback-btn {
             background: var(--card-border); color: var(--text-main); text-decoration: none;
@@ -137,7 +131,7 @@
     <div class="card full-width">
         <div class="card-label" style="justify-content: space-between;">
             <span>🔥 实时热榜资讯</span>
-            <span id="news-source" style="font-weight: normal;">自动寻源中...</span>
+            <span id="news-source" style="font-weight: normal; color: #f59e0b;">📡 正在扫描可用节点...</span>
         </div>
         <div id="news-list" class="news-grid">
             <div style="padding: 30px; text-align: center; color: var(--text-sub); grid-column: 1 / -1;">
@@ -150,7 +144,7 @@
 <script>
     const AMAP_KEY = '63d3f957d54929e51fd068d4ac3fa0db';
 
-    // 1. 实时时钟
+    // 1. 时钟
     function updateTime() {
         const now = new Date();
         document.getElementById('time').innerText = now.toTimeString().split(' ')[0];
@@ -159,7 +153,7 @@
     setInterval(updateTime, 1000);
     updateTime();
 
-    // 2. 高德天气 (增加容错)
+    // 2. 天气
     async function fetchWeather() {
         try {
             const ipRes = await fetch(`https://restapi.amap.com/v3/ip?key=${AMAP_KEY}`);
@@ -174,19 +168,14 @@
                     document.getElementById('weather-text').innerText = l.weather;
                     document.getElementById('weather-more').innerText = `风向: ${l.winddirection}风 | 湿度: ${l.humidity}%`;
                 }
-            } else {
-                throw new Error("定位失败");
             }
-        } catch (e) { 
-            document.getElementById('city').innerText = "暂无定位权限"; 
-            document.getElementById('weather-text').innerText = "请检查网络或API额度";
-        }
+        } catch (e) { }
     }
-    setTimeout(fetchWeather, 300); // 延迟执行防阻塞
+    setTimeout(fetchWeather, 300);
 
-    // 3. 黄历生成
+    // 3. 黄历
     function initLuck() {
-        const yis = ["专注工作", "学习充电", "深度阅读", "整理桌面", "联系老友"];
+        const yis = ["专注工作", "学习充电", "深度阅读", "整理桌面", "好好学习"];
         const jis = ["过度熬夜", "冲动消费", "久坐不动", "暴饮暴食", "情绪化"];
         const d = new Date().getDate();
         document.getElementById('yi-text').innerText = yis[d % yis.length];
@@ -194,35 +183,53 @@
     }
     initLuck();
 
-    // 4. 终极防堵塞新闻拉取逻辑
+    // 4. 彻底重构的新闻多节点引擎
     async function fetchNews() {
         const list = document.getElementById('news-list');
         const sourceLabel = document.getElementById('news-source');
         
-        // 定义多个API源和对应的数据解析规则
+        // 节点阵列：从聚合 API 到 强力穿透代理
         const apis = [
-            { name: '微博热搜', url: 'https://tenapi.cn/v2/weibohot', getList: d => d.data.map(i => ({title: i.name, url: i.url})) },
-            { name: '知乎热榜', url: 'https://api.vvhan.com/api/hotlist/zhiHu', getList: d => d.data.map(i => ({title: i.title, url: i.url})) },
-            { name: 'IT资讯', url: 'https://api.vvhan.com/api/hotlist/itNews', getList: d => d.data.map(i => ({title: i.title, url: i.url})) }
+            // 节点1：国内某高校公益接口（极速，但偶尔挂）
+            { 
+                name: '微博热搜 (国内节点)', 
+                url: 'https://v.api.aa1.cn/api/weibo-rs/', 
+                getList: d => d.data ? d.data.map(i => ({title: i.title, url: i.url})) : null 
+            },
+            // 节点2：国内 Vvhan 备用
+            { 
+                name: '知乎热榜 (备用节点)', 
+                url: 'https://api.vvhan.com/api/hotlist/zhiHu', 
+                getList: d => d.data ? d.data.map(i => ({title: i.title, url: i.url})) : null 
+            },
+            // 节点3：【终极杀手锏】通过全球免费 CORS 代理直连百度官方接口！
+            { 
+                name: '百度实时热点 (代理穿透)', 
+                url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://top.baidu.com/api/board?platform=pc&tab=realtime'), 
+                getList: d => (d.data && d.data.cards && d.data.cards[0].content) ? d.data.cards[0].content.map(i => ({title: i.word, url: i.url})) : null 
+            }
         ];
 
         for (let api of apis) {
             try {
-                // 设置 4 秒超时拦截，防止死等
+                // 每条线路只给 3 秒时间，不通立刻换下一条
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
                 
                 const res = await fetch(api.url, { signal: controller.signal });
                 clearTimeout(timeoutId);
                 
-                const data = await res.json();
+                // 将响应转化为JSON处理
+                const text = await res.text();
+                const data = JSON.parse(text);
                 const items = api.getList(data);
 
                 if (items && items.length > 0) {
-                    list.innerHTML = ''; // 清空提示
-                    sourceLabel.innerText = `数据源: ${api.name}`;
+                    list.innerHTML = ''; 
+                    sourceLabel.innerText = `🟢 已连接: ${api.name}`;
+                    sourceLabel.style.color = "#10b981"; // 绿色
                     
-                    // 只取前 10 条
+                    // 渲染前 10 条
                     items.slice(0, 10).forEach((item, index) => {
                         let rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : 'rank-other';
                         list.innerHTML += `
@@ -232,26 +239,26 @@
                             </a>
                         `;
                     });
-                    return; // 只要成功一个源，直接退出函数
+                    return; // 搞定一条就直接撤退，不再请求后续节点
                 }
             } catch (e) {
-                console.warn(`${api.name} 拉取失败，尝试下一个...`);
+                console.warn(`${api.name} 节点拥堵，自动切换...`);
             }
         }
 
-        // 如果三个API全部失败，触发降级UI（不再显示干瘪的错误提示，直接给直达按钮）
-        sourceLabel.innerText = "海外节点受限";
+        // 如果连终极穿透代理都被你当前的网络拦截了，优雅降级：
+        sourceLabel.innerText = "🔴 本地网络受限";
         sourceLabel.style.color = "#ef4444";
-        list.style.display = "block"; // 撤销 grid 布局
+        list.style.display = "block";
         list.innerHTML = `
             <div style="color: var(--text-sub); margin-bottom: 15px;">
-                ⚠️ 当前网络环境（或Cloudflare节点）拉取公共API受限。已为您开启快捷直达模式：
+                系统检测到当前网络环境拦截了公共资讯接口，已为您准备快捷直达通道：
             </div>
             <div class="fallback-container">
-                <a href="https://www.zhihu.com/hot" target="_blank" class="fallback-btn">👉 知乎热榜直达</a>
-                <a href="https://s.weibo.com/top/summary" target="_blank" class="fallback-btn">👉 微博热搜直达</a>
-                <a href="https://top.baidu.com/board" target="_blank" class="fallback-btn">👉 百度热搜直达</a>
-                <a href="https://www.ithome.com/" target="_blank" class="fallback-btn">👉 IT之家直达</a>
+                <a href="https://www.zhihu.com/hot" target="_blank" class="fallback-btn">👉 知乎热榜</a>
+                <a href="https://s.weibo.com/top/summary" target="_blank" class="fallback-btn">👉 微博热搜</a>
+                <a href="https://top.baidu.com/board" target="_blank" class="fallback-btn">👉 百度热搜</a>
+                <a href="https://www.ithome.com/" target="_blank" class="fallback-btn">👉 IT之家</a>
             </div>
         `;
     }
