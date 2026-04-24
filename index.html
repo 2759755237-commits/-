@@ -2,213 +2,164 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Personal Intelligent Dashboard</title>
     <style>
         :root {
-            --bg-color: #eef2f7;
-            --accent: #007aff;
-            --glass: rgba(255, 255, 255, 0.8);
-            --text: #1d1d1f;
-            --sub-text: #6e6e73;
+            --bg-color: #1a1a1a;
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --accent: #0a84ff;
+            --text: #ffffff;
+            --sub-text: #8e8e93;
         }
 
         body {
-            margin: 0; padding: 20px;
-            background: linear-gradient(135deg, #cfd9df 0%, #e2ebf0 100%);
+            margin: 0; padding: 15px;
+            background: radial-gradient(circle at top, #2c3e50, #000000);
             min-height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             color: var(--text);
             display: flex; justify-content: center;
         }
 
-        .container {
-            width: 100%; max-width: 1100px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
+        .container { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 15px; }
 
-        /* 基础卡片样式 */
         .card {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 24px;
-            padding: 24px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.05);
-            border: 1px solid rgba(255,255,255,0.3);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
 
-        /* 标题样式 */
-        .label { font-size: 12px; font-weight: 700; color: var(--sub-text); margin-bottom: 12px; letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
+        .label { font-size: 11px; font-weight: 700; color: var(--sub-text); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* 时间与问候 */
-        .hero-card { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; background: none; box-shadow: none; border: none; }
-        #time { font-size: 72px; font-weight: 700; margin: 0; color: var(--text); }
-        #greeting { font-size: 20px; margin-top: 10px; color: var(--accent); font-weight: 500; }
+        /* 时间显示 */
+        .time-card { text-align: center; background: none; border: none; padding: 10px 0; }
+        #time { font-size: 56px; font-weight: 700; margin: 0; letter-spacing: -1px; }
+        #greeting { font-size: 16px; color: var(--accent); margin-top: 5px; }
 
-        /* 天气模块 */
-        .weather-main { display: flex; justify-content: space-between; align-items: center; }
-        .temp { font-size: 48px; font-weight: 300; color: var(--accent); }
-        .weather-info b { font-size: 20px; display: block; }
+        /* 天气 */
+        .weather-row { display: flex; justify-content: space-between; align-items: center; }
+        .temp { font-size: 40px; font-weight: 300; }
+        .city { font-size: 18px; font-weight: 600; display: block; }
 
-        /* 新闻模块样式 */
-        .news-container { grid-column: 1 / -1; }
+        /* 新闻 */
         .news-item { 
-            display: flex; align-items: center; gap: 15px; padding: 12px; 
-            text-decoration: none; color: var(--text); border-radius: 14px; margin-bottom: 8px;
-            background: rgba(255,255,255,0.4); transition: 0.2s;
+            display: flex; gap: 12px; padding: 12px; text-decoration: none; 
+            color: var(--text); border-radius: 12px; background: rgba(255, 255, 255, 0.05); margin-bottom: 8px; font-size: 14px;
         }
-        .news-item:hover { background: #fff; color: var(--accent); }
-        .rank { width: 24px; height: 24px; background: #eee; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
-        .news-item:nth-child(-n+3) .rank { background: var(--accent); color: #fff; }
+        .rank { color: var(--accent); font-weight: bold; }
 
-        /* 底部模块 */
-        .footer-card { font-style: italic; line-height: 1.6; color: var(--sub-text); text-align: center; }
-
-        /* 按钮与小徽章 */
-        .badge { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 14px; font-weight: 600; }
-        .yi { background: #e3f9eb; color: #27ae60; }
-        .ji { background: #fff1f0; color: #ff4d4f; }
-
-        @media (max-width: 600px) { #time { font-size: 48px; } }
+        /* 运势 */
+        .luck-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+        .badge { padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; color: white; }
+        .yi { background: #32d74b; } .ji { background: #ff453a; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="card hero-card">
+    <div class="card time-card">
         <p id="time">00:00:00</p>
-        <p id="greeting">加载中...</p>
+        <p id="greeting">Loading...</p>
     </div>
 
     <div class="card">
-        <div class="label">🌦️ Current Weather</div>
-        <div class="weather-main">
-            <div class="weather-info">
-                <b id="city">城市定位中...</b>
-                <span id="weather-status">--</span>
+        <div class="label">🌤️ Weather</div>
+        <div class="weather-row">
+            <div>
+                <span class="city" id="city">定位中...</span>
+                <span id="weather-status" style="font-size: 14px; color: var(--sub-text);">获取数据中</span>
             </div>
             <div class="temp" id="temp-val">--°</div>
         </div>
-        <p id="weather-detail" style="font-size: 13px; color: var(--sub-text); margin-top: 15px;">数据同步中...</p>
     </div>
 
     <div class="card">
         <div class="label">📅 Daily Fortune</div>
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-            <div><span class="badge yi">宜</span> <span id="yi-text" style="margin-left:10px">加载中...</span></div>
-            <div><span class="badge ji">忌</span> <span id="ji-text" style="margin-left:10px">加载中...</span></div>
-            <div id="luck-desc" style="margin-top:10px; font-size: 14px; border-top: 1px solid #eee; padding-top: 10px;"></div>
-        </div>
+        <div class="luck-row"><span class="badge yi">宜</span> <span id="yi-text">加载中</span></div>
+        <div class="luck-row"><span class="badge ji">忌</span> <span id="ji-text">加载中</span></div>
+        <div id="luck-desc" style="font-size: 13px; color: var(--sub-text); margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;"></div>
     </div>
 
     <div class="card">
-        <div class="label">💡 Quote of the Day</div>
-        <div class="footer-card" id="quote">“ 思考是人类最大的乐趣。”</div>
-    </div>
-
-    <div class="card news-container">
-        <div class="label" style="display:flex; justify-content:space-between;">
-            <span>🔥 Hot Topics Today</span>
-            <span id="news-status" style="font-weight: normal; font-size: 11px;">数据实时同步</span>
-        </div>
-        <div id="news-list">
-            <div style="text-align:center; padding: 20px; color: #999;">正在接入资讯流...</div>
-        </div>
+        <div class="label">🔥 Hot Topics</div>
+        <div id="news-list"><div style="text-align:center; padding: 20px; color: #666; font-size: 12px;">正在连接多个资讯节点...</div></div>
     </div>
 </div>
 
 <script>
     const AMAP_KEY = '63d3f957d54929e51fd068d4ac3fa0db';
 
-    // 1. 时钟逻辑
     function updateClock() {
         const now = new Date();
         document.getElementById('time').innerText = now.toTimeString().split(' ')[0];
-        const dateStr = now.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
-        const hours = now.getHours();
-        let greet = hours < 12 ? "早上好" : hours < 18 ? "下午好" : "晚上好";
-        document.getElementById('greeting').innerText = `${dateStr} · ${greet}`;
+        document.getElementById('greeting').innerText = now.toLocaleDateString('zh-CN', {month:'short', day:'numeric', weekday:'short'}) + ' · 晚安';
     }
     setInterval(updateClock, 1000);
     updateClock();
 
-    // 2. 天气获取
-    async function fetchWeather() {
+    // 解决天气不显示的补丁
+    async function initWeather() {
         try {
             const ipRes = await fetch(`https://restapi.amap.com/v3/ip?key=${AMAP_KEY}`);
             const ipData = await ipRes.json();
-            if(ipData.status === '1') {
+            if(ipData.city) {
                 document.getElementById('city').innerText = ipData.city;
                 const wRes = await fetch(`https://restapi.amap.com/v3/weather/weatherInfo?key=${AMAP_KEY}&city=${ipData.adcode}`);
                 const wData = await wRes.json();
-                if(wData.lives && wData.lives.length > 0) {
-                    const l = wData.lives[0];
-                    document.getElementById('temp-val').innerText = l.temperature + '°';
-                    document.getElementById('weather-status').innerText = l.weather;
-                    document.getElementById('weather-detail').innerText = `风向：${l.winddirection} | 湿度：${l.humidity}% | 气压稳定`;
+                if(wData.lives[0]) {
+                    document.getElementById('temp-val').innerText = wData.lives[0].temperature + '°';
+                    document.getElementById('weather-status').innerText = wData.lives[0].weather;
                 }
             }
-        } catch (e) { document.getElementById('city').innerText = "天气接口异常"; }
+        } catch (e) { document.getElementById('city').innerText = "接口刷新中..."; }
     }
-    fetchWeather();
+    setTimeout(initWeather, 500); // 延迟半秒加载，确保稳定
 
-    // 3. 黄历逻辑
     function initLuck() {
-        const yis = ["代码重构", "开启新项目", "约见老友", "户外运动", "整理房间", "学习新技能"];
-        const jis = ["过度熬夜", "盲目投资", "情绪化消费", "久坐不动", "拖延症"];
-        const seed = new Date().getDate() + new Date().getMonth();
-        document.getElementById('yi-text').innerText = yis[seed % yis.length];
-        document.getElementById('ji-text').innerText = jis[(seed + 2) % jis.length];
-        document.getElementById('luck-desc').innerText = "今日运势：五颗星，适合在安静的环境中专注工作。";
+        const d = new Date().getDate();
+        const yis = ["代码重构", "户外运动", "整理房间", "阅读", "早睡"];
+        const jis = ["拖延症", "熬夜", "情绪化", "犹豫", "乱花钱"];
+        document.getElementById('yi-text').innerText = yis[d % 5];
+        document.getElementById('ji-text').innerText = jis[d % 5];
+        document.getElementById('luck-desc').innerText = "建议：保持心情愉悦，适合专注处理手头任务。";
     }
     initLuck();
 
-    // 4. 每日金句
-    async function fetchQuote() {
-        try {
-            const res = await fetch('https://v1.hitokoto.cn/?c=d&c=i');
-            const data = await res.json();
-            document.getElementById('quote').innerText = `“ ${data.hitokoto} ” —— ${data.from}`;
-        } catch (e) { /* 使用默认值 */ }
-    }
-    fetchQuote();
-
-    // 5. 增强版新闻获取 (双源容错)
+    // 多源新闻容错逻辑
     async function fetchNews() {
-        const container = document.getElementById('news-list');
-        const urls = [
+        const list = document.getElementById('news-list');
+        // 尝试三个不同的 API 源
+        const apis = [
             'https://api.vvhan.com/api/hotlist/zhiHu',
-            'https://api.vvhan.com/api/hotlist/wbHot'
+            'https://api.vvhan.com/api/hotlist/wbHot',
+            'https://api.vvhan.com/api/hotlist/baiduHot'
         ];
 
-        for (let url of urls) {
+        for (let api of apis) {
             try {
-                const res = await fetch(url);
+                const res = await fetch(api, { timeout: 5000 });
                 const data = await res.json();
                 if(data.success && data.data.length > 0) {
-                    container.innerHTML = '';
-                    data.data.slice(0, 12).forEach((item, index) => {
-                        const div = document.createElement('a');
-                        div.className = 'news-item';
-                        div.href = item.url;
-                        div.target = "_blank";
-                        div.innerHTML = `<div class="rank">${index + 1}</div><div>${item.title}</div>`;
-                        container.appendChild(div);
+                    list.innerHTML = '';
+                    data.data.slice(0, 8).forEach((item, index) => {
+                        const a = document.createElement('a');
+                        a.className = 'news-item';
+                        a.href = item.url;
+                        a.target = '_blank';
+                        a.innerHTML = `<span class="rank">${index+1}</span><span>${item.title}</span>`;
+                        list.appendChild(a);
                     });
-                    document.getElementById('news-status').innerText = url.includes('zhiHu') ? "来源：知乎热榜" : "来源：微博热搜";
-                    return; // 只要成功一个就停止
+                    return; // 成功则跳出循环
                 }
-            } catch (e) { console.warn("接口尝试失败:", url); }
+            } catch (e) { console.log("源失败，切换下一个..."); }
         }
-        container.innerHTML = "<div style='text-align:center; padding:20px;'>资讯接口维护中，请稍后再试。</div>";
+        list.innerHTML = "<div style='text-align:center;font-size:12px;color:#666;'>所有资讯通道繁忙，请稍后刷新。</div>";
     }
     fetchNews();
 </script>
-
 </body>
 </html>
