@@ -2,164 +2,261 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Personal Intelligent Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>私人数据中心</title>
     <style>
         :root {
-            --bg-color: #1a1a1a;
-            --card-bg: rgba(255, 255, 255, 0.1);
-            --accent: #0a84ff;
-            --text: #ffffff;
-            --sub-text: #8e8e93;
+            --bg: #0f172a;           /* 深邃蓝背景 */
+            --card-bg: #1e293b;      /* 卡片底色 */
+            --card-border: #334155;  /* 卡片边框 */
+            --text-main: #f8fafc;    /* 主文本 */
+            --text-sub: #94a3b8;     /* 副文本 */
+            --accent: #3b82f6;       /* 主题蓝 */
+            --rank-1: #ef4444;       /* 热搜前三颜色 */
+            --rank-2: #f97316;
+            --rank-3: #eab308;
+            --rank-other: #64748b;
         }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            margin: 0; padding: 15px;
-            background: radial-gradient(circle at top, #2c3e50, #000000);
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
             min-height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            color: var(--text);
-            display: flex; justify-content: center;
+            padding: 20px 10px;
+            overflow-y: auto; /* 确保手机端可以上下滚动 */
+            line-height: 1.5;
         }
 
-        .container { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 15px; }
+        /* 核心网格布局：PC端并排，手机端堆叠 */
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .full-width { grid-column: 1 / -1; } /* 占满整行 */
 
         .card {
             background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+        .card:hover { transform: translateY(-2px); border-color: #475569; }
+
+        .card-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
         }
 
-        .label { font-size: 11px; font-weight: 700; color: var(--sub-text); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        /* 时间模块 */
+        .time-box { text-align: center; padding: 30px 0; background: transparent; border: none; box-shadow: none; }
+        #time { font-size: clamp(60px, 8vw, 80px); font-weight: 800; letter-spacing: 2px; text-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        #date { font-size: 18px; color: var(--accent); font-weight: 500; margin-top: 8px; }
 
-        /* 时间显示 */
-        .time-card { text-align: center; background: none; border: none; padding: 10px 0; }
-        #time { font-size: 56px; font-weight: 700; margin: 0; letter-spacing: -1px; }
-        #greeting { font-size: 16px; color: var(--accent); margin-top: 5px; }
+        /* 天气模块 */
+        .weather-content { display: flex; justify-content: space-between; align-items: center; }
+        .temp { font-size: 56px; font-weight: 300; line-height: 1; }
+        .city { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
 
-        /* 天气 */
-        .weather-row { display: flex; justify-content: space-between; align-items: center; }
-        .temp { font-size: 40px; font-weight: 300; }
-        .city { font-size: 18px; font-weight: 600; display: block; }
-
-        /* 新闻 */
-        .news-item { 
-            display: flex; gap: 12px; padding: 12px; text-decoration: none; 
-            color: var(--text); border-radius: 12px; background: rgba(255, 255, 255, 0.05); margin-bottom: 8px; font-size: 14px;
+        /* 黄历模块 */
+        .luck-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .luck-badge { padding: 4px 10px; border-radius: 8px; font-size: 13px; font-weight: bold; color: #fff; }
+        .yi { background: #10b981; } .ji { background: #ef4444; }
+        
+        /* 新闻模块 (PC端双列，手机端单列) */
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+        .news-item {
+            display: flex; gap: 12px; padding: 12px 16px;
+            background: rgba(255,255,255,0.03); border-radius: 12px;
+            text-decoration: none; color: var(--text-main); font-size: 15px;
+            transition: background 0.2s;
+            align-items: flex-start;
         }
-        .rank { color: var(--accent); font-weight: bold; }
+        .news-item:hover { background: rgba(255,255,255,0.08); }
+        .news-title { overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        
+        .rank { font-weight: 900; font-size: 16px; font-style: italic; min-width: 20px; text-align: center; }
+        .rank-1 { color: var(--rank-1); } .rank-2 { color: var(--rank-2); } .rank-3 { color: var(--rank-3); }
+        .rank-other { color: var(--rank-other); }
 
-        /* 运势 */
-        .luck-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
-        .badge { padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; color: white; }
-        .yi { background: #32d74b; } .ji { background: #ff453a; }
+        /* 降级UI：快捷按钮 */
+        .fallback-container { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
+        .fallback-btn {
+            background: var(--card-border); color: var(--text-main); text-decoration: none;
+            padding: 10px 20px; border-radius: 8px; font-size: 14px; transition: 0.2s;
+        }
+        .fallback-btn:hover { background: var(--accent); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="card time-card">
-        <p id="time">00:00:00</p>
-        <p id="greeting">Loading...</p>
+    <div class="card time-box full-width">
+        <div id="time">00:00</div>
+        <div id="date">加载中...</div>
     </div>
 
     <div class="card">
-        <div class="label">🌤️ Weather</div>
-        <div class="weather-row">
+        <div class="card-label">🌤️ 当前天气</div>
+        <div class="weather-content">
             <div>
-                <span class="city" id="city">定位中...</span>
-                <span id="weather-status" style="font-size: 14px; color: var(--sub-text);">获取数据中</span>
+                <div class="city" id="city">定位中...</div>
+                <div id="weather-text" style="color: var(--text-sub);">拉取气象数据中</div>
             </div>
-            <div class="temp" id="temp-val">--°</div>
+            <div class="temp" id="temp">--°</div>
+        </div>
+        <div id="weather-more" style="margin-top:20px; font-size:13px; color:var(--text-sub); border-top:1px solid var(--card-border); padding-top:12px;">
+            系统已就绪
         </div>
     </div>
 
     <div class="card">
-        <div class="label">📅 Daily Fortune</div>
-        <div class="luck-row"><span class="badge yi">宜</span> <span id="yi-text">加载中</span></div>
-        <div class="luck-row"><span class="badge ji">忌</span> <span id="ji-text">加载中</span></div>
-        <div id="luck-desc" style="font-size: 13px; color: var(--sub-text); margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;"></div>
+        <div class="card-label">📅 每日运势</div>
+        <div class="luck-row"><span class="luck-badge yi">宜</span> <span id="yi-text">加载中</span></div>
+        <div class="luck-row"><span class="luck-badge ji">忌</span> <span id="ji-text">加载中</span></div>
+        <div id="luck-desc" style="margin-top:20px; font-size:13px; color:var(--text-sub); border-top:1px solid var(--card-border); padding-top:12px;">
+            无论运势如何，过好当下每一刻。
+        </div>
     </div>
 
-    <div class="card">
-        <div class="label">🔥 Hot Topics</div>
-        <div id="news-list"><div style="text-align:center; padding: 20px; color: #666; font-size: 12px;">正在连接多个资讯节点...</div></div>
+    <div class="card full-width">
+        <div class="card-label" style="justify-content: space-between;">
+            <span>🔥 实时热榜资讯</span>
+            <span id="news-source" style="font-weight: normal;">自动寻源中...</span>
+        </div>
+        <div id="news-list" class="news-grid">
+            <div style="padding: 30px; text-align: center; color: var(--text-sub); grid-column: 1 / -1;">
+                正在与云端资讯节点建立连接，请稍候...
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
     const AMAP_KEY = '63d3f957d54929e51fd068d4ac3fa0db';
 
-    function updateClock() {
+    // 1. 实时时钟
+    function updateTime() {
         const now = new Date();
         document.getElementById('time').innerText = now.toTimeString().split(' ')[0];
-        document.getElementById('greeting').innerText = now.toLocaleDateString('zh-CN', {month:'short', day:'numeric', weekday:'short'}) + ' · 晚安';
+        document.getElementById('date').innerText = now.toLocaleDateString('zh-CN', {month:'long', day:'numeric', weekday:'long'});
     }
-    setInterval(updateClock, 1000);
-    updateClock();
+    setInterval(updateTime, 1000);
+    updateTime();
 
-    // 解决天气不显示的补丁
-    async function initWeather() {
+    // 2. 高德天气 (增加容错)
+    async function fetchWeather() {
         try {
             const ipRes = await fetch(`https://restapi.amap.com/v3/ip?key=${AMAP_KEY}`);
             const ipData = await ipRes.json();
-            if(ipData.city) {
+            if(ipData.status === '1' && ipData.city) {
                 document.getElementById('city').innerText = ipData.city;
                 const wRes = await fetch(`https://restapi.amap.com/v3/weather/weatherInfo?key=${AMAP_KEY}&city=${ipData.adcode}`);
                 const wData = await wRes.json();
-                if(wData.lives[0]) {
-                    document.getElementById('temp-val').innerText = wData.lives[0].temperature + '°';
-                    document.getElementById('weather-status').innerText = wData.lives[0].weather;
+                if(wData.lives && wData.lives.length > 0) {
+                    const l = wData.lives[0];
+                    document.getElementById('temp').innerText = l.temperature + '°';
+                    document.getElementById('weather-text').innerText = l.weather;
+                    document.getElementById('weather-more').innerText = `风向: ${l.winddirection}风 | 湿度: ${l.humidity}%`;
                 }
+            } else {
+                throw new Error("定位失败");
             }
-        } catch (e) { document.getElementById('city').innerText = "接口刷新中..."; }
+        } catch (e) { 
+            document.getElementById('city').innerText = "暂无定位权限"; 
+            document.getElementById('weather-text').innerText = "请检查网络或API额度";
+        }
     }
-    setTimeout(initWeather, 500); // 延迟半秒加载，确保稳定
+    setTimeout(fetchWeather, 300); // 延迟执行防阻塞
 
+    // 3. 黄历生成
     function initLuck() {
+        const yis = ["专注工作", "学习充电", "深度阅读", "整理桌面", "联系老友"];
+        const jis = ["过度熬夜", "冲动消费", "久坐不动", "暴饮暴食", "情绪化"];
         const d = new Date().getDate();
-        const yis = ["代码重构", "户外运动", "整理房间", "阅读", "早睡"];
-        const jis = ["拖延症", "熬夜", "情绪化", "犹豫", "乱花钱"];
-        document.getElementById('yi-text').innerText = yis[d % 5];
-        document.getElementById('ji-text').innerText = jis[d % 5];
-        document.getElementById('luck-desc').innerText = "建议：保持心情愉悦，适合专注处理手头任务。";
+        document.getElementById('yi-text').innerText = yis[d % yis.length];
+        document.getElementById('ji-text').innerText = jis[(d + 3) % jis.length];
     }
     initLuck();
 
-    // 多源新闻容错逻辑
+    // 4. 终极防堵塞新闻拉取逻辑
     async function fetchNews() {
         const list = document.getElementById('news-list');
-        // 尝试三个不同的 API 源
+        const sourceLabel = document.getElementById('news-source');
+        
+        // 定义多个API源和对应的数据解析规则
         const apis = [
-            'https://api.vvhan.com/api/hotlist/zhiHu',
-            'https://api.vvhan.com/api/hotlist/wbHot',
-            'https://api.vvhan.com/api/hotlist/baiduHot'
+            { name: '微博热搜', url: 'https://tenapi.cn/v2/weibohot', getList: d => d.data.map(i => ({title: i.name, url: i.url})) },
+            { name: '知乎热榜', url: 'https://api.vvhan.com/api/hotlist/zhiHu', getList: d => d.data.map(i => ({title: i.title, url: i.url})) },
+            { name: 'IT资讯', url: 'https://api.vvhan.com/api/hotlist/itNews', getList: d => d.data.map(i => ({title: i.title, url: i.url})) }
         ];
 
         for (let api of apis) {
             try {
-                const res = await fetch(api, { timeout: 5000 });
+                // 设置 4 秒超时拦截，防止死等
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                
+                const res = await fetch(api.url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                
                 const data = await res.json();
-                if(data.success && data.data.length > 0) {
-                    list.innerHTML = '';
-                    data.data.slice(0, 8).forEach((item, index) => {
-                        const a = document.createElement('a');
-                        a.className = 'news-item';
-                        a.href = item.url;
-                        a.target = '_blank';
-                        a.innerHTML = `<span class="rank">${index+1}</span><span>${item.title}</span>`;
-                        list.appendChild(a);
+                const items = api.getList(data);
+
+                if (items && items.length > 0) {
+                    list.innerHTML = ''; // 清空提示
+                    sourceLabel.innerText = `数据源: ${api.name}`;
+                    
+                    // 只取前 10 条
+                    items.slice(0, 10).forEach((item, index) => {
+                        let rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : 'rank-other';
+                        list.innerHTML += `
+                            <a href="${item.url}" target="_blank" class="news-item">
+                                <div class="rank ${rankClass}">${index + 1}</div>
+                                <div class="news-title">${item.title}</div>
+                            </a>
+                        `;
                     });
-                    return; // 成功则跳出循环
+                    return; // 只要成功一个源，直接退出函数
                 }
-            } catch (e) { console.log("源失败，切换下一个..."); }
+            } catch (e) {
+                console.warn(`${api.name} 拉取失败，尝试下一个...`);
+            }
         }
-        list.innerHTML = "<div style='text-align:center;font-size:12px;color:#666;'>所有资讯通道繁忙，请稍后刷新。</div>";
+
+        // 如果三个API全部失败，触发降级UI（不再显示干瘪的错误提示，直接给直达按钮）
+        sourceLabel.innerText = "海外节点受限";
+        sourceLabel.style.color = "#ef4444";
+        list.style.display = "block"; // 撤销 grid 布局
+        list.innerHTML = `
+            <div style="color: var(--text-sub); margin-bottom: 15px;">
+                ⚠️ 当前网络环境（或Cloudflare节点）拉取公共API受限。已为您开启快捷直达模式：
+            </div>
+            <div class="fallback-container">
+                <a href="https://www.zhihu.com/hot" target="_blank" class="fallback-btn">👉 知乎热榜直达</a>
+                <a href="https://s.weibo.com/top/summary" target="_blank" class="fallback-btn">👉 微博热搜直达</a>
+                <a href="https://top.baidu.com/board" target="_blank" class="fallback-btn">👉 百度热搜直达</a>
+                <a href="https://www.ithome.com/" target="_blank" class="fallback-btn">👉 IT之家直达</a>
+            </div>
+        `;
     }
     fetchNews();
 </script>
+
 </body>
 </html>
