@@ -5,17 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>海克斯飞鸟</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+        input, textarea { user-select: auto; -webkit-user-select: auto; }
+        
         body { background-color: #050811; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Segoe UI', Tahoma, sans-serif; touch-action: none; }
         #game-container { position: relative; width: 100%; max-width: 420px; height: 100%; max-height: 750px; background-color: #70c5ce; box-shadow: 0 0 50px rgba(0,0,0,0.9); overflow: hidden; cursor: pointer; transition: background-color 1s ease; }
         canvas { display: block; width: 100%; height: 100%; }
         .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
 
-        /* 顶部栏 */
-        .top-bar { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; align-items: center; z-index: 20; pointer-events: none; }
-        .coin-display { background: rgba(0,0,0,0.6); padding: 6px 15px; border-radius: 20px; color: #fce78b; font-weight: bold; font-size: 16px; border: 1px solid #c5a059; backdrop-filter: blur(4px); }
-        .btn-row { display: flex; gap: 8px; pointer-events: auto; }
-        .top-btn { border: 2px solid #fff; border-radius: 20px; padding: 6px 12px; color: white; font-weight: bold; cursor: pointer; transition: 0.1s; font-size: 13px;}
+        .top-bar { position: absolute; top: 15px; left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: center; z-index: 20; pointer-events: none; }
+        .coin-display { background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 20px; color: #fce78b; font-weight: bold; font-size: 14px; border: 1px solid #c5a059; backdrop-filter: blur(4px); }
+        .btn-row { display: flex; gap: 5px; pointer-events: auto; }
+        .top-btn { border: 2px solid #fff; border-radius: 15px; padding: 5px 8px; color: white; font-weight: bold; cursor: pointer; transition: 0.1s; font-size: 12px;}
+        .promo-btn { background: #10b981; box-shadow: 0 3px 0 #059669; }
         .shop-btn { background: #f26d21; box-shadow: 0 3px 0 #cf5511; }
         .gacha-btn { background: #8b5cf6; box-shadow: 0 3px 0 #6d28d9; }
         .top-btn:active { transform: translateY(3px); box-shadow: none; }
@@ -23,14 +25,18 @@
         .score-board { position: absolute; top: 12%; width: 100%; text-align: center; font-size: 55px; font-weight: 900; color: #fff; -webkit-text-stroke: 2px #543847; text-shadow: 2px 2px 0 #543847, 0 4px 10px rgba(0,0,0,0.3); z-index: 5; pointer-events: none; }
         .theme-alert { position: absolute; top: 25%; width: 100%; text-align: center; font-size: 24px; font-weight: 900; color: #fff; text-shadow: 0 0 10px #fff; opacity: 0; pointer-events: none; z-index: 5; transition: opacity 0.5s; }
 
-        /* 面板通用 */
         .panel { background: #ded895; border: 3px solid #543847; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 8px 0 rgba(0,0,0,0.2); pointer-events: auto; width: 90%; max-width: 340px; max-height: 80vh; overflow-y: auto; }
         .panel::-webkit-scrollbar { width: 0; }
         .panel-title { color: #f26d21; font-size: 26px; font-weight: 900; -webkit-text-stroke: 1px #fff; margin-bottom: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);}
         .close-btn { background: #ef4444; color: white; padding: 10px 30px; border:none; border-radius: 30px; font-weight:900; font-size: 16px; margin-top: 15px; cursor:pointer; width: 100%; box-shadow: 0 4px 0 #b91c1c;}
         .close-btn:active { transform: translateY(4px); box-shadow: none; }
 
-        /* 商店与兑换码 */
+        #promo-screen { background: rgba(0,0,0,0.85); display: none; }
+        .promo-input { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #a98547; background: #e8d08c; color: #543847; font-weight: bold; font-size: 18px; outline: none; text-align: center; margin-bottom: 15px;}
+        .promo-input::placeholder { color: #a98547; opacity: 0.8; font-size: 14px; }
+        .btn-claim-big { background: #10b981; color: white; font-weight: 900; font-size: 18px; padding: 12px; width: 100%; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 0 #059669; }
+        .btn-claim-big:active { transform: translateY(4px); box-shadow: none; }
+
         #shop-screen { background: rgba(0,0,0,0.85); display: none; }
         .shop-section-title { font-weight: 900; color: #543847; margin: 15px 0 10px; border-bottom: 2px dashed #a98547; padding-bottom: 5px;}
         .shop-item { background: #ceb572; border: 2px solid #a98547; border-radius: 8px; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
@@ -41,13 +47,7 @@
         .shop-btn-sm { padding: 6px 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; flex-shrink: 0; margin-left: 10px;}
         .btn-buy { background: #10b981; } .btn-equip { background: #3b82f6; } .btn-equipped { background: #94a3b8; } .btn-claim { background: #eab308; box-shadow: 0 0 10px #eab308; animation: pulse 1s infinite; }
         @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
-        
-        /* 兑换码输入框 */
-        .promo-container { display: flex; gap: 8px; margin-bottom: 10px; }
-        .promo-input { flex: 1; padding: 8px 12px; border-radius: 6px; border: 2px solid #a98547; background: #e8d08c; color: #543847; font-weight: bold; font-size: 14px; outline: none; }
-        .promo-input::placeholder { color: #a98547; opacity: 0.8; }
 
-        /* 抽卡 */
         #gacha-screen { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); display: none; pointer-events: auto; }
         .gacha-banner { background: linear-gradient(90deg, #8b5cf6, #3b82f6); border-radius: 10px; padding: 15px; color: white; font-weight: bold; margin-bottom: 15px; border: 2px solid #ddd; box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);}
         .gacha-btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
@@ -63,7 +63,6 @@
         .r-legendary { border-color: #fbbf24; color: #fef3c7; background: linear-gradient(135deg, #d97706, #b45309); box-shadow: 0 0 15px rgba(245, 158, 11, 0.8); }
         .card-icon { font-size: 24px; margin-bottom: 5px; }
 
-        /* 结算界面 */
         #game-over-screen { background: rgba(0,0,0,0.6); display: none; }
         .score-box { background: #ceb572; border-radius: 5px; padding: 15px 10px; margin-bottom: 15px; border: 2px solid #a98547;}
         .score-number { color: #fff; font-size: 38px; font-weight: 900; -webkit-text-stroke: 1px #543847; }
@@ -79,7 +78,6 @@
         .ready-msg { color: #fff; font-size: 24px; font-weight: 900; -webkit-text-stroke: 1.5px #543847; text-align: center; animation: blink 1.2s infinite; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
 
-        /* 海克斯界面 */
         #hextech-screen { background: rgba(10, 15, 30, 0.85); backdrop-filter: blur(8px); display: none; pointer-events: auto; }
         .hex-title { color: #00ffcc; font-size: 26px; font-weight: 900; margin-bottom: 5px; text-shadow: 0 0 15px rgba(0,255,204,0.6); }
         .hex-subtitle { color: #a0b0c0; font-size: 12px; margin-bottom: 20px; }
@@ -89,7 +87,6 @@
         .hex-desc { color: #cbd5e1; font-size: 13px; line-height: 1.4; }
         .active-items-banner { background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #34d399; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 15px; }
 
-        /* 高能警告动画 */
         .laser-warning { position: absolute; width: 100%; height: 2px; background: red; z-index: 5; box-shadow: 0 0 10px red; opacity: 0; }
     </style>
 </head>
@@ -99,6 +96,7 @@
         <div class="top-bar" id="top-bar">
             <div class="coin-display">🪙 <span id="coin-amount">0</span></div>
             <div class="btn-row">
+                <button class="top-btn promo-btn" id="promo-open-btn">🎁 兑换</button>
                 <button class="top-btn shop-btn" id="shop-open-btn">🛒 商店</button>
                 <button class="top-btn gacha-btn" id="gacha-open-btn">🌠 祈愿</button>
             </div>
@@ -110,8 +108,18 @@
         <canvas id="gameCanvas"></canvas>
 
         <div class="ui-layer" id="start-screen">
-            <div style="font-size: 45px; color: #fff; font-weight: 900; -webkit-text-stroke: 2.5px #543847; margin-bottom: 60px; text-shadow: 0 5px 15px rgba(0,0,0,0.4);">Flappy V15</div>
+            <div style="font-size: 45px; color: #fff; font-weight: 900; -webkit-text-stroke: 2.5px #543847; margin-bottom: 60px; text-shadow: 0 5px 15px rgba(0,0,0,0.4);">Flappy V17</div>
             <div class="ready-msg">点击屏幕<br>启动进化</div>
+        </div>
+
+        <div class="ui-layer" id="promo-screen">
+            <div class="panel" style="max-width: 300px; background: #eab308; border-color: #ca8a04;">
+                <div class="panel-title" style="color: #fff; -webkit-text-stroke: 1px #a16207; text-shadow: 0 2px 4px #854d0e;">🎁 兑换中心</div>
+                <div style="margin-bottom: 15px; font-size: 13px; color: #713f12; font-weight: bold;">输入神秘代码，获取丰厚奖励！</div>
+                <input type="text" id="promo-code-input" class="promo-input" placeholder="请输入兑换码">
+                <button class="btn-claim-big" onclick="redeemPromoCode(event)">确认兑换</button>
+                <button class="close-btn" style="background:#ca8a04; box-shadow: 0 4px 0 #a16207;" id="promo-close-btn">关闭</button>
+            </div>
         </div>
 
         <div class="ui-layer" id="gacha-screen">
@@ -123,8 +131,8 @@
                 </div>
                 <div class="gacha-result-grid" id="gacha-results"></div>
                 <div class="gacha-btn-group">
-                    <button class="g-btn g-btn-1" id="btn-pull-1">单抽 100🪙</button>
-                    <button class="g-btn g-btn-10" id="btn-pull-10">十连 900🪙</button>
+                    <button class="g-btn g-btn-1" onclick="pullGacha(1, event)" ontouchstart="pullGacha(1, event)">单抽 100🪙</button>
+                    <button class="g-btn g-btn-10" onclick="pullGacha(10, event)" ontouchstart="pullGacha(10, event)">十连 900🪙</button>
                 </div>
                 <button class="close-btn" style="background:#475569; box-shadow:0 4px 0 #334155;" id="gacha-close-btn">返回主城</button>
             </div>
@@ -135,12 +143,6 @@
                 <div class="panel-title">主城补给站</div>
                 <div style="margin-bottom: 10px; font-weight: 900; color: #543847; font-size: 18px;">我的资产: <span id="shop-coins" style="color:#f26d21;">0</span> 🪙</div>
                 
-                <div class="shop-section-title" style="color:#3b82f6;">✦ 兑换中心 ✦</div>
-                <div class="promo-container">
-                    <input type="text" id="promo-code-input" class="promo-input" placeholder="输入兑换码" autocomplete="off">
-                    <button class="shop-btn-sm btn-claim" style="background:#3b82f6; box-shadow:0 0 10px #3b82f6;" onclick="redeemPromoCode(event)">兑换</button>
-                </div>
-
                 <div class="shop-section-title" style="color:#eab308;">✦ 赏金任务板 ✦</div>
                 <div id="quest-list"></div>
 
@@ -192,7 +194,6 @@
         window.addEventListener('resize', resize);
         resize();
 
-        // --- 全局数据 ---
         let myCoins = 0;
         let unlockedSkins = ['default', 'white', 'red']; 
         let currentSkin = 'default';
@@ -201,7 +202,7 @@
         let scoreHistory = [];
         let myItems = { shield: 0, doubleScore: 0, godWealth: 0, potion: 0, rocket: 0 }; 
         let stats = { gachaCount: 0, totalScore: 0, totalGames: 0 }; 
-        let usedPromoCodes = []; // 兑换码记录记录
+        let usedPromoCodes = []; 
 
         let quests = [
             { id: 'q1', desc: '累计达到 150 分', target: 150, reward: 200, type: 'totalScore', claimed: false },
@@ -209,76 +210,65 @@
         ];
 
         try {
-            myCoins = parseInt(localStorage.getItem('v15Coins')) || 0;
-            let sSkins = JSON.parse(localStorage.getItem('v15Skins')); if(sSkins) unlockedSkins = sSkins;
-            currentSkin = localStorage.getItem('v15CurrentSkin') || 'default';
-            let sPets = JSON.parse(localStorage.getItem('v15Pets')); if(sPets) unlockedPets = sPets;
-            currentPet = localStorage.getItem('v15CurrentPet') || 'none';
-            scoreHistory = JSON.parse(localStorage.getItem('v15History')) || [];
-            let sItems = JSON.parse(localStorage.getItem('v15Items')); if(sItems) myItems = Object.assign(myItems, sItems);
-            let sStats = JSON.parse(localStorage.getItem('v15Stats')); if(sStats) stats = Object.assign(stats, sStats);
-            let sQuests = JSON.parse(localStorage.getItem('v15Quests')); if(sQuests) quests = sQuests;
-            let sCodes = JSON.parse(localStorage.getItem('v15Codes')); if(sCodes) usedPromoCodes = sCodes;
+            myCoins = parseInt(localStorage.getItem('v17Coins')) || 0;
+            let sSkins = JSON.parse(localStorage.getItem('v17Skins')); if(sSkins) unlockedSkins = sSkins;
+            currentSkin = localStorage.getItem('v17CurrentSkin') || 'default';
+            let sPets = JSON.parse(localStorage.getItem('v17Pets')); if(sPets) unlockedPets = sPets;
+            currentPet = localStorage.getItem('v17CurrentPet') || 'none';
+            scoreHistory = JSON.parse(localStorage.getItem('v17History')) || [];
+            let sItems = JSON.parse(localStorage.getItem('v17Items')); if(sItems) myItems = Object.assign(myItems, sItems);
+            let sStats = JSON.parse(localStorage.getItem('v17Stats')); if(sStats) stats = Object.assign(stats, sStats);
+            let sQuests = JSON.parse(localStorage.getItem('v17Quests')); if(sQuests) quests = sQuests;
+            let sCodes = JSON.parse(localStorage.getItem('v17Codes')); if(sCodes) usedPromoCodes = sCodes;
         } catch(e) {}
 
         function saveData() {
             try {
-                localStorage.setItem('v15Coins', myCoins); localStorage.setItem('v15Skins', JSON.stringify(unlockedSkins));
-                localStorage.setItem('v15CurrentSkin', currentSkin); localStorage.setItem('v15Pets', JSON.stringify(unlockedPets));
-                localStorage.setItem('v15CurrentPet', currentPet); localStorage.setItem('v15History', JSON.stringify(scoreHistory));
-                localStorage.setItem('v15Items', JSON.stringify(myItems)); localStorage.setItem('v15Stats', JSON.stringify(stats));
-                localStorage.setItem('v15Quests', JSON.stringify(quests)); localStorage.setItem('v15Codes', JSON.stringify(usedPromoCodes));
+                localStorage.setItem('v17Coins', myCoins); localStorage.setItem('v17Skins', JSON.stringify(unlockedSkins));
+                localStorage.setItem('v17CurrentSkin', currentSkin); localStorage.setItem('v17Pets', JSON.stringify(unlockedPets));
+                localStorage.setItem('v17CurrentPet', currentPet); localStorage.setItem('v17History', JSON.stringify(scoreHistory));
+                localStorage.setItem('v17Items', JSON.stringify(myItems)); localStorage.setItem('v17Stats', JSON.stringify(stats));
+                localStorage.setItem('v17Quests', JSON.stringify(quests)); localStorage.setItem('v17Codes', JSON.stringify(usedPromoCodes));
             } catch(e) {}
         }
         document.getElementById('coin-amount').innerText = myCoins;
 
-        // --- 兑换码中心逻辑 ---
+        // --- 兑换中心逻辑 ---
+        document.getElementById('promo-open-btn').addEventListener('click', (e) => {
+            e.stopPropagation(); document.getElementById('promo-code-input').value = ''; document.getElementById('promo-screen').style.display = 'flex';
+        });
+        document.getElementById('promo-close-btn').addEventListener('click', (e) => {
+            e.stopPropagation(); document.getElementById('promo-screen').style.display = 'none';
+        });
+
         window.redeemPromoCode = function(e) {
             e.stopPropagation();
+            if(e.type === 'touchstart' && e.cancelable) e.preventDefault();
             const inputEl = document.getElementById('promo-code-input');
-            const code = inputEl.value.trim().toUpperCase(); // 转大写处理，防止大小写错误
+            const code = inputEl.value.trim().toUpperCase(); 
             
-            if (!code) { alert("请输入兑换码！"); return; }
-            if (usedPromoCodes.includes(code)) { alert("您已经使用过这个兑换码了！"); return; }
+            if (!code) { alert("请输入神秘代码！"); return; }
+            if (usedPromoCodes.includes(code)) { alert("这串代码已经被你吸收过了！"); return; }
 
             if (code === '6688') {
                 myCoins += 1000;
-                usedPromoCodes.push(code);
-                saveData();
-                document.getElementById('shop-coins').innerText = myCoins;
-                document.getElementById('coin-amount').innerText = myCoins;
-                alert("🎉 兑换成功！获得了 1000 金币！");
-                inputEl.value = '';
+                usedPromoCodes.push(code); saveData(); document.getElementById('coin-amount').innerText = myCoins;
+                alert("🎉 兑换成功！喜提 1000 金币启动资金！"); document.getElementById('promo-screen').style.display = 'none';
             } else if (code === 'FLAPPY') {
-                // 隐藏彩蛋
-                myCoins += 500;
-                myItems.shield += 3;
-                usedPromoCodes.push(code);
-                saveData();
-                document.getElementById('shop-coins').innerText = myCoins;
-                document.getElementById('coin-amount').innerText = myCoins;
-                alert("🥚 发现隐藏彩蛋！获得 500 金币 + 3个护盾！");
-                inputEl.value = '';
-                renderShop(); // 刷新商店道具数量显示
+                myCoins += 500; myItems.shield += 3;
+                usedPromoCodes.push(code); saveData(); document.getElementById('coin-amount').innerText = myCoins;
+                alert("🥚 发现终极彩蛋！获得 500 金币 + 3个护盾发生器！"); document.getElementById('promo-screen').style.display = 'none';
             } else {
-                alert("无效的兑换码。");
+                alert("无效的代码，请检查是否输入正确。");
             }
         };
 
-        // --- 伴游宠物系统 ---
         const PETS = {
             'none': { cost: 0, name: '无', buff: '无加成', magnet: 0, render: ()=>{} },
-            'fairy': { cost: 800, name: '寻宝精灵', buff: '强力金币磁吸 (120px)', magnet: 120, render: (x, y, f) => {
-                ctx.fillStyle = '#00ffcc'; ctx.beginPath(); ctx.arc(x, y + Math.sin(f*0.1)*5, 6, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = 'rgba(0, 255, 204, 0.4)'; ctx.beginPath(); ctx.arc(x, y + Math.sin(f*0.1)*5, 12, 0, Math.PI*2); ctx.fill();
-            }},
-            'dragon': { cost: -1, name: '深渊骨龙(史诗)', buff: '中等磁吸 + 开局额外1层盾', magnet: 60, initShield: 1, render: (x, y, f) => {
-                ctx.fillStyle = '#9333ea'; ctx.fillRect(x-6, y-4 + Math.sin(f*0.1)*5, 12, 8);
-                ctx.fillStyle = '#ef4444'; ctx.fillRect(x+2, y-2 + Math.sin(f*0.1)*5, 4, 4); 
-            }}
+            'fairy': { cost: 800, name: '寻宝精灵', buff: '强力金币磁吸 (120px)', magnet: 120, render: (x, y, f) => { ctx.fillStyle = '#00ffcc'; ctx.beginPath(); ctx.arc(x, y + Math.sin(f*0.1)*5, 6, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = 'rgba(0, 255, 204, 0.4)'; ctx.beginPath(); ctx.arc(x, y + Math.sin(f*0.1)*5, 12, 0, Math.PI*2); ctx.fill(); }},
+            'dragon': { cost: -1, name: '深渊骨龙(史诗)', buff: '中等磁吸 + 开局额外1层盾', magnet: 60, initShield: 1, render: (x, y, f) => { ctx.fillStyle = '#9333ea'; ctx.fillRect(x-6, y-4 + Math.sin(f*0.1)*5, 12, 8); ctx.fillStyle = '#ef4444'; ctx.fillRect(x+2, y-2 + Math.sin(f*0.1)*5, 4, 4); }}
         };
 
-        // --- 抽卡系统 ---
         const GACHA_POOL = [
             { id: 'c_50', type: 'coin', val: 50, name: '50 金币', icon: '🪙', rarity: 'common', prob: 30 },
             { id: 'i_shield', type: 'item', key: 'shield', name: '护盾发生器', icon: '🛡️', rarity: 'common', prob: 20 },
@@ -307,9 +297,11 @@
         let isPulling = false;
         window.pullGacha = function(times, e) {
             e.stopPropagation();
+            if(e.type === 'touchstart' && e.cancelable) e.preventDefault(); // 阻止手机端的多次点击触发
+
             if(isPulling) return;
             let cost = times === 1 ? 100 : 900;
-            if(myCoins < cost) { alert('金币不足！快去闯关赚取吧！'); return; }
+            if(myCoins < cost) { alert('金币不足！快去闯关赚取或输入兑换码！'); return; }
             
             myCoins -= cost; isPulling = true;
             const resultsBox = document.getElementById('gacha-results'); resultsBox.innerHTML = '';
@@ -348,7 +340,6 @@
         document.getElementById('gacha-open-btn').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('gacha-coins').innerText = myCoins; document.getElementById('gacha-results').innerHTML = '<div style="grid-column: 1/-1; color: #94a3b8; padding: 20px;">准备祈愿... (十连必出紫)</div>'; document.getElementById('gacha-screen').style.display = 'flex'; });
         document.getElementById('gacha-close-btn').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('gacha-screen').style.display = 'none'; });
 
-        // --- 环境与物理 ---
         const THEMES = [
             { threshold: 0, sky: '#70c5ce', groundTop: '#73bf2e', groundMid: '#ded895', pipeLight: '#9cce59', pipeMain: '#73bf2e', pipeDark: '#558022', name: '蔚蓝天际' },
             { threshold: 20, sky: '#ffb7b2', groundTop: '#e67e22', groundMid: '#d35400', pipeLight: '#f39c12', pipeMain: '#e67e22', pipeDark: '#ba4a00', name: '余晖荒漠' },
@@ -369,7 +360,6 @@
         let dynamicEvent = { active: false, type: 'none', timer: 0, y: 0 }; 
         let petPos = { x: -50, y: -50 };
 
-        // --- 皮肤 ---
         const SKINS = {
             'default': { cost: 0, name: '小黄鸡', buff: '金币+10%', apply: () => sys.coinMult *= 1.1, render: (b) => drawBird(b, '#f4ce42', '#f26d21') },
             'white': { cost: 0, name: '和平鸽', buff: '重力-10%', apply: () => sys.gravity *= 0.9, render: (b) => drawBird(b, '#ffffff', '#f1c40f') },
@@ -662,7 +652,6 @@
             setTimeout(() => { document.getElementById('game-over-screen').style.display = 'flex'; }, 300); 
         }
 
-        // --- 商店与任务 ---
         document.getElementById('shop-open-btn').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('shop-coins').innerText = myCoins; renderShop(); document.getElementById('shop-screen').style.display = 'flex'; });
         document.getElementById('shop-close-btn').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('shop-screen').style.display = 'none'; });
 
@@ -742,9 +731,8 @@
 
         let lastFlapTime = 0;
         function action(e) {
-            // UI元素保护层：如果点到按钮或输入框，让给它们自己处理
             if (e.target && (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || (e.target.closest && (e.target.closest('.panel') || e.target.closest('.hex-card'))))) return;
-            if (document.getElementById('shop-screen').style.display === 'flex' || document.getElementById('gacha-screen').style.display === 'flex') return;
+            if (document.getElementById('shop-screen').style.display === 'flex' || document.getElementById('gacha-screen').style.display === 'flex' || document.getElementById('promo-screen').style.display === 'flex') return;
             
             if (e.type === 'keydown' && e.code !== 'Space') return;
             if (e.cancelable && (e.type === 'touchstart' || e.code === 'Space')) e.preventDefault();
