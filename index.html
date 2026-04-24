@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>赛博矩阵：极限潜行</title>
+    <title>像素大冒险 - 横版闯关</title>
     <style>
         :root {
-            --bg: #0a0a14;
-            --player: #00e5ff;
-            --enemy: #ff1744;
-            --coin: #ffea00;
-            --safe: #00e676;
-            --wall: #263238;
-            --text: #ffffff;
+            --sky: #87CEEB;     /* 天空蓝 */
+            --ground: #4CAF50;  /* 草地绿 */
+            --dirt: #795548;    /* 泥土棕 */
+            --player: #F44336;  /* 主角红 */
+            --enemy: #9C27B0;   /* 怪物紫 */
+            --coin: #FFEB3B;    /* 金币黄 */
+            --flag: #2196F3;    /* 终点蓝 */
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
 
         body {
-            background-color: var(--bg);
-            color: var(--text);
+            background-color: #222;
+            color: #fff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
@@ -27,476 +27,482 @@
             justify-content: center;
             height: 100vh;
             overflow: hidden;
-            touch-action: none; /* 彻底禁止页面滑动和缩放 */
+            touch-action: none;
         }
 
-        /* 顶部状态栏 */
         .hud {
             width: 100%;
             max-width: 800px;
             display: flex;
             justify-content: space-between;
             padding: 10px 20px;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            background: #111;
             z-index: 10;
         }
-        .death-count { color: var(--enemy); text-shadow: 0 0 10px var(--enemy); }
-        .level-count { color: var(--player); text-shadow: 0 0 10px var(--player); }
 
-        /* 游戏画布容器：保持比例，自适应屏幕 */
-        .game-container {
+        .game-wrapper {
             position: relative;
             width: 100%;
             max-width: 800px;
-            aspect-ratio: 4 / 3; /* 锁定 4:3 比例 */
-            background: #11111a;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 40px rgba(0, 229, 255, 0.1);
+            /* 保持 16:9 比例 */
+            aspect-ratio: 16 / 9;
+            background: var(--sky);
             overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
+        canvas { display: block; width: 100%; height: 100%; }
 
-        /* 手机端虚拟方向键 (默认隐藏，仅在触摸屏显示) */
-        .dpad-container {
+        /* --- 手机端虚拟按键 --- */
+        .mobile-controls {
             display: none;
+            position: absolute;
+            bottom: 20px;
             width: 100%;
-            max-width: 300px;
-            margin-top: 20px;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(2, 1fr);
-            gap: 10px;
-            padding: 10px;
+            padding: 0 20px;
+            justify-content: space-between;
+            pointer-events: none; /* 让空白处不遮挡点击 */
         }
 
-        .d-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            color: white;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 15px 0;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        .ctrl-group { display: flex; gap: 15px; pointer-events: auto; }
+
+        .btn {
+            width: 60px; height: 60px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            color: white; font-size: 24px; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(4px);
         }
-        .d-btn:active { background: rgba(0, 229, 255, 0.3); border-color: var(--player); }
+        .btn:active { background: rgba(255, 255, 255, 0.6); transform: scale(0.95); }
+        .btn-jump { width: 70px; height: 70px; border-radius: 16px; background: rgba(244, 67, 54, 0.4); border-color: rgba(244, 67, 54, 0.8);}
+        .btn-jump:active { background: rgba(244, 67, 54, 0.7); }
 
-        .btn-up { grid-column: 2; grid-row: 1; }
-        .btn-left { grid-column: 1; grid-row: 2; }
-        .btn-down { grid-column: 2; grid-row: 2; }
-        .btn-right { grid-column: 3; grid-row: 2; }
-
-        /* 使用媒体查询判断是否为触摸屏设备 */
         @media (pointer: coarse) {
-            .dpad-container { display: grid; }
-            .game-container { aspect-ratio: auto; height: 50vh; } /* 手机上稍微压缩画布高度给手柄腾空间 */
+            .mobile-controls { display: flex; }
+            .game-wrapper { aspect-ratio: auto; height: 100%; max-height: 500px; }
         }
 
-        /* 胜利界面 */
-        #win-screen {
+        /* 浮层界面 (胜利/死亡) */
+        .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); display: none; flex-direction: column;
+            background: rgba(0,0,0,0.8); display: none; flex-direction: column;
             justify-content: center; align-items: center; z-index: 100;
         }
-        #win-screen h1 { color: var(--safe); font-size: 40px; margin-bottom: 10px; text-shadow: 0 0 20px var(--safe); }
-        #win-screen p { margin-bottom: 20px; font-size: 18px; color: #ccc; }
-        #win-screen button {
-            padding: 12px 30px; font-size: 18px; font-weight: bold; background: var(--player);
-            color: #000; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s;
+        .overlay h1 { font-size: 40px; margin-bottom: 10px; }
+        .overlay p { font-size: 18px; margin-bottom: 25px; color: #ccc; }
+        .overlay button {
+            padding: 12px 30px; font-size: 18px; font-weight: bold; background: #4CAF50;
+            color: #fff; border: none; border-radius: 8px; cursor: pointer;
         }
-        #win-screen button:hover { box-shadow: 0 0 20px var(--player); transform: scale(1.05); }
-
     </style>
 </head>
 <body>
 
     <div class="hud">
-        <div class="level-count">LEVEL: <span id="level-display">1</span>/3</div>
-        <div class="death-count">DEATHS: <span id="death-display">0</span></div>
+        <div>SCORE: <span id="score">0</span></div>
+        <div>LEVEL: <span id="level">1</span>/3</div>
+        <div>LIVES: <span id="lives">3</span></div>
     </div>
 
-    <div class="game-container">
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div class="game-wrapper">
+        <canvas id="gameCanvas" width="800" height="450"></canvas>
         
-        <div id="win-screen">
-            <h1>SYSTEM HACKED!</h1>
-            <p>你以 <span id="final-deaths" style="color:var(--enemy);font-weight:bold;">0</span> 次死亡的代价攻破了防火墙</p>
-            <button onclick="restartGame()">重新挑战</button>
+        <div class="mobile-controls">
+            <div class="ctrl-group">
+                <div class="btn" id="btn-left">◀</div>
+                <div class="btn" id="btn-right">▶</div>
+            </div>
+            <div class="ctrl-group">
+                <div class="btn btn-jump" id="btn-jump">UP</div>
+            </div>
         </div>
-    </div>
 
-    <div class="dpad-container">
-        <div class="d-btn btn-up" id="btn-up">▲</div>
-        <div class="d-btn btn-left" id="btn-left">◀</div>
-        <div class="d-btn btn-down" id="btn-down">▼</div>
-        <div class="d-btn btn-right" id="btn-right">▶</div>
+        <div class="overlay" id="message-screen">
+            <h1 id="msg-title">LEVEL CLEARED!</h1>
+            <p id="msg-desc">准备进入下一关</p>
+            <button id="msg-btn" onclick="nextAction()">继续</button>
+        </div>
     </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+
+        // 游戏核心常量
+        const GRAVITY = 0.6;
+        const FRICTION = 0.8;
+        const JUMP_POWER = -12;
+        const MOVE_SPEED = 5;
         
-        // 游戏核心状态
+        // 游戏状态
         let currentLevel = 0;
-        let deaths = 0;
+        let score = 0;
+        let lives = 3;
         let gameLoop;
-        let keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, w: false, a: false, s: false, d: false };
+        let cameraX = 0;
+        let isGameRunning = false;
 
-        // 基础参数
-        const PLAYER_SIZE = 24;
-        const PLAYER_SPEED = 4.5;
-        const ENEMY_RADIUS = 10;
-        const COIN_SIZE = 14;
+        let keys = { left: false, right: false, up: false };
 
-        let player = { x: 0, y: 0, vx: 0, vy: 0 };
+        // 主角对象
+        let player = {
+            x: 50, y: 50, width: 30, height: 30,
+            vx: 0, vy: 0,
+            isGrounded: false,
+            color: 'var(--player)'
+        };
+
+        // 地图元素容器
+        let platforms = [];
         let enemies = [];
         let coins = [];
-        let walls = [];
-        let safeZones = [];
-        
-        // ---------------- 关卡设计器 (硬核精华) ----------------
-        // 画布大小为 800x600。
-        const levelsData = [
+        let goal = { x: 0, y: 0, width: 40, height: 150 };
+
+        // ---------------- 关卡设计器 ----------------
+        // 画布高度是 450。地面一般在 y: 400
+        const levels = [
             {
-                // 第一关：初出茅庐（简单的上下交叉）
+                // Level 1: 纯跳跃教学，没有怪物
+                width: 1500, // 地图总长度
                 start: { x: 50, y: 300 },
-                safe: [
-                    { x: 0, y: 200, w: 100, h: 200 },     // 起点安全区
-                    { x: 700, y: 200, w: 100, h: 200 }    // 终点安全区
+                goal: { x: 1350, y: 250 },
+                platforms: [
+                    { x: 0, y: 400, w: 500, h: 50 },    // 出生点平地
+                    { x: 600, y: 400, w: 300, h: 50 },  // 跨过沟壑后的平地
+                    { x: 700, y: 300, w: 100, h: 20 },  // 悬空小台阶
+                    { x: 1000, y: 400, w: 500, h: 50 }  // 终点平地
                 ],
-                walls: [
-                    { x: 100, y: 0, w: 600, h: 200 },     // 上墙
-                    { x: 100, y: 400, w: 600, h: 200 }    // 下墙
-                ],
+                enemies: [],
                 coins: [
-                    { x: 400, y: 300, collected: false }
-                ],
-                enemies: [
-                    { x: 250, y: 210, vx: 0, vy: 6, minY: 210, maxY: 390 },
-                    { x: 350, y: 390, vx: 0, vy: -6, minY: 210, maxY: 390 },
-                    { x: 450, y: 210, vx: 0, vy: 6, minY: 210, maxY: 390 },
-                    { x: 550, y: 390, vx: 0, vy: -6, minY: 210, maxY: 390 }
+                    { x: 300, y: 350, collected: false },
+                    { x: 735, y: 250, collected: false },
+                    { x: 1100, y: 350, collected: false }
                 ]
             },
             {
-                // 第二关：旋转木马（风车走位）
-                start: { x: 50, y: 50 },
-                safe: [
-                    { x: 0, y: 0, w: 100, h: 100 },
-                    { x: 700, y: 500, w: 100, h: 100 }
-                ],
-                walls: [
-                    { x: 100, y: 0, w: 600, h: 50 },
-                    { x: 100, y: 550, w: 600, h: 50 },
-                    { x: 300, y: 200, w: 200, h: 200 } // 中间的巨大障碍物
-                ],
-                coins: [
-                    { x: 750, y: 50, collected: false },
-                    { x: 50, y: 550, collected: false }
+                // Level 2: 引入怪物和高低差
+                width: 2000,
+                start: { x: 50, y: 300 },
+                goal: { x: 1850, y: 250 },
+                platforms: [
+                    { x: 0, y: 400, w: 600, h: 50 },
+                    { x: 400, y: 300, w: 150, h: 20 },
+                    { x: 750, y: 400, w: 400, h: 50 },
+                    { x: 1000, y: 250, w: 100, h: 20 },
+                    { x: 1300, y: 400, w: 700, h: 50 }
                 ],
                 enemies: [
-                    // 顺时针巡逻外环
-                    { x: 150, y: 100, vx: 7, vy: 0, minX: 150, maxX: 650, path: 'rect', w: 500, h: 400, dir: 1 },
-                    { x: 650, y: 500, vx: -7, vy: 0, minX: 150, maxX: 650, path: 'rect', w: 500, h: 400, dir: 1 },
-                    // 逆时针巡逻内环
-                    { x: 250, y: 150, vx: 0, vy: 5, minX: 250, maxX: 550, path: 'rect', w: 300, h: 300, dir: -1 },
-                    { x: 550, y: 450, vx: 0, vy: -5, minX: 250, maxX: 550, path: 'rect', w: 300, h: 300, dir: -1 }
+                    // 怪物会在 minX 和 maxX 之间巡逻
+                    { x: 450, y: 370, w: 30, h: 30, vx: 2, minX: 400, maxX: 550, alive: true },
+                    { x: 800, y: 370, w: 30, h: 30, vx: -2, minX: 750, maxX: 1100, alive: true }
+                ],
+                coins: [
+                    { x: 450, y: 250, collected: false },
+                    { x: 1035, y: 200, collected: false }
                 ]
             },
             {
-                // 第三关：赛博死胡同（极限微操）
+                // Level 3: 连续跳跃与怪物组合
+                width: 2500,
                 start: { x: 50, y: 300 },
-                safe: [
-                    { x: 0, y: 250, w: 100, h: 100 },
-                    { x: 700, y: 250, w: 100, h: 100 }
-                ],
-                walls: [
-                    { x: 100, y: 0, w: 600, h: 250 },
-                    { x: 100, y: 350, w: 600, h: 250 },
-                    { x: 200, y: 250, w: 20, h: 70 },
-                    { x: 400, y: 280, w: 20, h: 70 },
-                    { x: 600, y: 250, w: 20, h: 70 }
-                ],
-                coins: [
-                    { x: 300, y: 300, collected: false },
-                    { x: 500, y: 300, collected: false }
+                goal: { x: 2350, y: 150 },
+                platforms: [
+                    { x: 0, y: 400, w: 400, h: 50 },
+                    { x: 500, y: 350, w: 150, h: 20 },
+                    { x: 750, y: 300, w: 150, h: 20 },
+                    { x: 1000, y: 250, w: 150, h: 20 }, // 阶梯向上
+                    { x: 1300, y: 400, w: 600, h: 50 },
+                    { x: 1500, y: 280, w: 100, h: 20 },
+                    { x: 2100, y: 400, w: 400, h: 50 },
+                    { x: 2300, y: 300, w: 150, h: 100 } // 终点高台
                 ],
                 enemies: [
-                    // 极其密集的弹幕网
-                    { x: 150, y: 260, vx: 0, vy: 9, minY: 260, maxY: 340 },
-                    { x: 250, y: 340, vx: 0, vy: -10, minY: 260, maxY: 340 },
-                    { x: 350, y: 260, vx: 0, vy: 11, minY: 260, maxY: 340 },
-                    { x: 450, y: 340, vx: 0, vy: -12, minY: 260, maxY: 340 },
-                    { x: 550, y: 260, vx: 0, vy: 13, minY: 260, maxY: 340 },
-                    { x: 650, y: 340, vx: 0, vy: -14, minY: 260, maxY: 340 },
-                    // 横向干扰
-                    { x: 100, y: 300, vx: 15, vy: 0, minX: 100, maxX: 700 }
+                    { x: 500, y: 320, w: 30, h: 30, vx: 1.5, minX: 500, maxX: 620, alive: true },
+                    { x: 1400, y: 370, w: 30, h: 30, vx: 2.5, minX: 1300, maxX: 1850, alive: true },
+                    { x: 1600, y: 370, w: 30, h: 30, vx: -2.5, minX: 1300, maxX: 1850, alive: true }
+                ],
+                coins: [
+                    { x: 810, y: 250, collected: false },
+                    { x: 1060, y: 200, collected: false },
+                    { x: 1535, y: 230, collected: false }
                 ]
             }
         ];
 
-        // ---------------- 游戏引擎核心 ----------------
-
         function loadLevel(index) {
-            if (index >= levelsData.length) {
-                showWinScreen();
+            if (index >= levels.length) {
+                showScreen("YOU WIN!", "恭喜通关所有地图！最终得分: " + score, "重新开始全关卡", () => {
+                    currentLevel = 0; score = 0; lives = 3; loadLevel(0);
+                });
                 return;
             }
-            const data = JSON.parse(JSON.stringify(levelsData[index])); // 深拷贝防止修改原始数据
             
-            player.x = data.start.x - PLAYER_SIZE/2;
-            player.y = data.start.y - PLAYER_SIZE/2;
-            safeZones = data.safe;
-            walls = data.walls;
-            coins = data.coins;
-            enemies = data.enemies;
+            const levelData = JSON.parse(JSON.stringify(levels[index])); // 深拷贝
             
-            document.getElementById('level-display').innerText = index + 1;
-            document.getElementById('death-display').innerText = deaths;
+            player.x = levelData.start.x;
+            player.y = levelData.start.y;
+            player.vx = 0; player.vy = 0;
+            
+            platforms = levelData.platforms;
+            enemies = levelData.enemies;
+            coins = levelData.coins;
+            goal = levelData.goal;
+            goal.width = 40; goal.height = 150; // 旗杆大小
+
+            cameraX = 0;
+            
+            document.getElementById('level').innerText = index + 1;
+            document.getElementById('score').innerText = score;
+            document.getElementById('lives').innerText = lives;
+            
+            isGameRunning = true;
+            loop();
         }
 
-        function resetPlayer() {
-            deaths++;
-            document.getElementById('death-display').innerText = deaths;
-            
-            // 重新重置当前关卡，恢复被吃掉的金币
-            loadLevel(currentLevel);
-            
-            // 死亡特效（画面闪红）
-            canvas.style.boxShadow = "inset 0 0 100px rgba(255, 23, 68, 0.8)";
-            setTimeout(() => { canvas.style.boxShadow = "none"; }, 150);
-        }
-
-        // 绘制发光矩形
-        function drawGlowRect(x, y, w, h, color, blur) {
-            ctx.shadowBlur = blur;
-            ctx.shadowColor = color;
-            ctx.fillStyle = color;
-            ctx.fillRect(x, y, w, h);
-            ctx.shadowBlur = 0;
-        }
-
-        // 绘制发光圆形
-        function drawGlowCircle(x, y, r, color, blur) {
-            ctx.shadowBlur = blur;
-            ctx.shadowColor = color;
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-        }
-
+        // ---------------- 物理引擎与逻辑更新 ----------------
         function update() {
-            // 玩家移动逻辑 (斜向移动归一化，防止斜走太快)
-            let dx = 0; let dy = 0;
-            if (keys.ArrowUp || keys.w) dy -= 1;
-            if (keys.ArrowDown || keys.s) dy += 1;
-            if (keys.ArrowLeft || keys.a) dx -= 1;
-            if (keys.ArrowRight || keys.d) dx += 1;
+            if (!isGameRunning) return;
 
-            if (dx !== 0 && dy !== 0) {
-                const length = Math.sqrt(dx*dx + dy*dy);
-                dx /= length; dy /= length;
-            }
-
-            let nextX = player.x + dx * PLAYER_SPEED;
-            let nextY = player.y + dy * PLAYER_SPEED;
-
-            // 屏幕边界限制
-            if(nextX < 0) nextX = 0;
-            if(nextX + PLAYER_SIZE > canvas.width) nextX = canvas.width - PLAYER_SIZE;
-            if(nextY < 0) nextY = 0;
-            if(nextY + PLAYER_SIZE > canvas.height) nextY = canvas.height - PLAYER_SIZE;
-
-            // 墙壁物理碰撞 (AABB - 极其严苛的滑动碰撞)
-            let collidedX = false;
-            let collidedY = false;
+            // 1. 玩家水平移动
+            if (keys.left) player.vx -= 1;
+            if (keys.right) player.vx += 1;
             
-            for (let w of walls) {
-                // 测试X轴
-                if (nextX < w.x + w.w && nextX + PLAYER_SIZE > w.x && player.y < w.y + w.h && player.y + PLAYER_SIZE > w.y) {
-                    collidedX = true;
-                }
-                // 测试Y轴
-                if (player.x < w.x + w.w && player.x + PLAYER_SIZE > w.x && nextY < w.y + w.h && nextY + PLAYER_SIZE > w.y) {
-                    collidedY = true;
+            player.vx *= FRICTION; // 摩擦力减速
+            
+            // 限制最大速度
+            if (player.vx > MOVE_SPEED) player.vx = MOVE_SPEED;
+            if (player.vx < -MOVE_SPEED) player.vx = -MOVE_SPEED;
+
+            player.x += player.vx;
+
+            // 限制玩家不能跑到地图最左边之外
+            if (player.x < 0) { player.x = 0; player.vx = 0; }
+
+            // 2. 玩家垂直移动 (重力)
+            player.vy += GRAVITY;
+            player.y += player.vy;
+
+            // 3. 平台碰撞检测 (AABB)
+            player.isGrounded = false;
+            for (let p of platforms) {
+                // 检查是否重叠
+                if (player.x < p.x + p.w && player.x + player.width > p.x &&
+                    player.y < p.y + p.h && player.y + player.height > p.y) {
+                    
+                    // 从上往下掉落碰到平台 (踩在地上)
+                    if (player.vy > 0 && player.y + player.height - player.vy <= p.y + 5) {
+                        player.isGrounded = true;
+                        player.vy = 0;
+                        player.y = p.y - player.height;
+                    } 
+                    // 从下往上顶到平台 (顶头)
+                    else if (player.vy < 0 && player.y - player.vy >= p.y + p.h - 5) {
+                        player.vy = 0;
+                        player.y = p.y + p.h;
+                    }
+                    // 水平碰撞 (撞墙)
+                    else {
+                        if (player.vx > 0) player.x = p.x - player.width; // 往右撞
+                        else if (player.vx < 0) player.x = p.x + p.w;     // 往左撞
+                        player.vx = 0;
+                    }
                 }
             }
-            if (!collidedX) player.x = nextX;
-            if (!collidedY) player.y = nextY;
 
-            // 敌人移动逻辑
+            // 4. 跳跃逻辑
+            if (keys.up && player.isGrounded) {
+                player.vy = JUMP_POWER;
+                player.isGrounded = false;
+            }
+
+            // 5. 掉入深渊检测
+            if (player.y > canvas.height + 100) {
+                handleDeath();
+            }
+
+            // 6. 怪物逻辑
             for (let e of enemies) {
+                if (!e.alive) continue;
+                
+                // 怪物巡逻
                 e.x += e.vx;
-                e.y += e.vy;
+                if (e.x < e.minX || e.x + e.w > e.maxX) e.vx *= -1;
 
-                // 简单的直线反弹
-                if (!e.path) {
-                    if (e.vx !== 0 && (e.x < e.minX || e.x > e.maxX)) e.vx *= -1;
-                    if (e.vy !== 0 && (e.y < e.minY || e.y > e.maxY)) e.vy *= -1;
-                } 
-                // 矩形环绕轨迹 (高级敌兵)
-                else if (e.path === 'rect') {
-                    if (e.dir === 1) { // 顺时针
-                        if (e.vx > 0 && e.x >= e.minX + e.w) { e.x = e.minX + e.w; e.vx = 0; e.vy = Math.abs(e.vx || e.vy); }
-                        else if (e.vy > 0 && e.y >= e.minY + e.h) { e.y = e.minY + e.h; e.vy = 0; e.vx = -Math.abs(e.vx || e.vy); }
-                        else if (e.vx < 0 && e.x <= e.minX) { e.x = e.minX; e.vx = 0; e.vy = -Math.abs(e.vx || e.vy); }
-                        else if (e.vy < 0 && e.y <= e.minY) { e.y = e.minY; e.vy = 0; e.vx = Math.abs(e.vx || e.vy); }
-                    } else { // 逆时针
-                        if (e.vx < 0 && e.x <= e.minX) { e.x = e.minX; e.vx = 0; e.vy = Math.abs(e.vx || e.vy); }
-                        else if (e.vy > 0 && e.y >= e.minY + e.h) { e.y = e.minY + e.h; e.vy = 0; e.vx = Math.abs(e.vx || e.vy); }
-                        else if (e.vx > 0 && e.x >= e.minX + e.w) { e.x = e.minX + e.w; e.vx = 0; e.vy = -Math.abs(e.vx || e.vy); }
-                        else if (e.vy < 0 && e.y <= e.minY) { e.y = e.minY; e.vy = 0; e.vx = -Math.abs(e.vx || e.vy); }
-                    }
-                }
-            }
-
-            // 死亡检测 (矩形 vs 圆形)
-            let inSafeZone = false;
-            for(let sz of safeZones) {
-                if (player.x >= sz.x && player.x + PLAYER_SIZE <= sz.x + sz.w && 
-                    player.y >= sz.y && player.y + PLAYER_SIZE <= sz.y + sz.h) {
-                    inSafeZone = true;
-                    break;
-                }
-            }
-
-            if (!inSafeZone) {
-                for (let e of enemies) {
-                    let testX = e.x; let testY = e.y;
-                    if (e.x < player.x) testX = player.x;
-                    else if (e.x > player.x + PLAYER_SIZE) testX = player.x + PLAYER_SIZE;
-                    if (e.y < player.y) testY = player.y;
-                    else if (e.y > player.y + PLAYER_SIZE) testY = player.y + PLAYER_SIZE;
+                // 主角与怪物碰撞
+                if (player.x < e.x + e.w && player.x + player.width > e.x &&
+                    player.y < e.y + e.h && player.y + player.height > e.y) {
                     
-                    let distX = e.x - testX;
-                    let distY = e.y - testY;
-                    let distance = Math.sqrt((distX*distX) + (distY*distY));
-                    
-                    // 缩小一点点碰撞体积，防止死得太冤
-                    if (distance <= ENEMY_RADIUS - 2) {
-                        resetPlayer();
-                        return; // 立即跳出更新循环
-                    }
-                }
-            }
-
-            // 吃金币检测
-            let allCoinsCollected = true;
-            for (let c of coins) {
-                if (!c.collected) {
-                    // 简单的中心点碰撞
-                    if (player.x < c.x + COIN_SIZE && player.x + PLAYER_SIZE > c.x - COIN_SIZE &&
-                        player.y < c.y + COIN_SIZE && player.y + PLAYER_SIZE > c.y - COIN_SIZE) {
-                        c.collected = true;
+                    // 核心机制：如果主角在下落，且脚底高于怪物中心 -> 踩死怪物
+                    if (player.vy > 0 && player.y + player.height - player.vy < e.y + e.h / 2) {
+                        e.alive = false;
+                        player.vy = JUMP_POWER * 0.8; // 踩死后小弹跳
+                        score += 50;
+                        document.getElementById('score').innerText = score;
                     } else {
-                        allCoinsCollected = false;
+                        // 侧面碰到，主角死亡
+                        handleDeath();
                     }
                 }
             }
 
-            // 过关检测：人在最后的安全区（默认数组最后一个为终点），且金币吃完
-            if (allCoinsCollected) {
-                let exitZone = safeZones[safeZones.length - 1];
-                if (player.x >= exitZone.x && player.x + PLAYER_SIZE <= exitZone.x + exitZone.w &&
-                    player.y >= exitZone.y && player.y + PLAYER_SIZE <= exitZone.y + exitZone.h) {
-                    currentLevel++;
-                    loadLevel(currentLevel);
+            // 7. 金币收集
+            for (let c of coins) {
+                if (!c.collected && 
+                    player.x < c.x + 20 && player.x + player.width > c.x &&
+                    player.y < c.y + 20 && player.y + player.height > c.y) {
+                    c.collected = true;
+                    score += 10;
+                    document.getElementById('score').innerText = score;
                 }
             }
+
+            // 8. 终点判定
+            if (player.x < goal.x + goal.width && player.x + player.width > goal.x &&
+                player.y < goal.y + goal.height && player.y + player.height > goal.y) {
+                isGameRunning = false;
+                score += 100;
+                showScreen("STAGE CLEAR!", "干得漂亮，得分: " + score, "下一关", () => {
+                    currentLevel++; loadLevel(currentLevel);
+                });
+            }
+
+            // 9. 镜头跟随处理 (主角跑到屏幕中右侧时滚动镜头)
+            if (player.x > cameraX + canvas.width * 0.4) {
+                cameraX = player.x - canvas.width * 0.4;
+            }
+            // 限制镜头不能往回倒退太多（可选），或者不能超出地图总长
+            const currentMapWidth = levels[currentLevel].width;
+            if (cameraX > currentMapWidth - canvas.width) cameraX = currentMapWidth - canvas.width;
+            if (cameraX < 0) cameraX = 0;
         }
 
+        // ---------------- 渲染与绘制 ----------------
         function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // 清空并填充天空背景
+            ctx.fillStyle = 'var(--sky)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 绘制安全区
-            for (let sz of safeZones) {
-                ctx.fillStyle = 'rgba(0, 230, 118, 0.15)';
-                ctx.fillRect(sz.x, sz.y, sz.w, sz.h);
-                ctx.strokeStyle = 'rgba(0, 230, 118, 0.5)';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(sz.x, sz.y, sz.w, sz.h);
-            }
+            ctx.save();
+            // 应用镜头偏移 (只偏移X轴)
+            ctx.translate(-cameraX, 0);
 
-            // 绘制墙壁
-            for (let w of walls) {
-                drawGlowRect(w.x, w.y, w.w, w.h, 'var(--wall)', 0);
+            // 绘制终点旗杆
+            ctx.fillStyle = 'var(--flag)';
+            ctx.fillRect(goal.x, goal.y, goal.width, goal.height);
+            ctx.fillStyle = '#fff'; // 旗帜
+            ctx.beginPath(); ctx.moveTo(goal.x, goal.y); ctx.lineTo(goal.x - 40, goal.y + 20); ctx.lineTo(goal.x, goal.y + 40); ctx.fill();
+
+            // 绘制平台 (带点草地和泥土的分层效果)
+            for (let p of platforms) {
+                ctx.fillStyle = 'var(--ground)';
+                ctx.fillRect(p.x, p.y, p.w, Math.min(15, p.h)); // 顶部草皮
+                if (p.h > 15) {
+                    ctx.fillStyle = 'var(--dirt)';
+                    ctx.fillRect(p.x, p.y + 15, p.w, p.h - 15); // 下面泥土
+                }
             }
 
             // 绘制金币
+            ctx.fillStyle = 'var(--coin)';
             for (let c of coins) {
                 if (!c.collected) {
-                    drawGlowRect(c.x - COIN_SIZE/2, c.y - COIN_SIZE/2, COIN_SIZE, COIN_SIZE, 'var(--coin)', 15);
+                    ctx.beginPath(); ctx.arc(c.x + 10, c.y + 10, 10, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = '#fff'; ctx.fillRect(c.x + 7, c.y + 4, 6, 12); ctx.fillStyle = 'var(--coin)'; // 金币高光
                 }
             }
 
-            // 绘制敌人
+            // 绘制怪物
+            ctx.fillStyle = 'var(--enemy)';
             for (let e of enemies) {
-                drawGlowCircle(e.x, e.y, ENEMY_RADIUS, 'var(--enemy)', 15);
-                // 敌兵核心白点，增加科技感
-                ctx.fillStyle = '#fff';
-                ctx.beginPath(); ctx.arc(e.x, e.y, ENEMY_RADIUS * 0.4, 0, Math.PI*2); ctx.fill();
+                if (e.alive) {
+                    ctx.fillRect(e.x, e.y, e.w, e.h);
+                    // 给怪物画两个眼睛
+                    ctx.fillStyle = '#fff'; ctx.fillRect(e.x + 5, e.y + 5, 5, 5); ctx.fillRect(e.x + 20, e.y + 5, 5, 5); ctx.fillStyle = 'var(--enemy)';
+                }
             }
 
-            // 绘制玩家 (核心带光环)
-            drawGlowRect(player.x, player.y, PLAYER_SIZE, PLAYER_SIZE, 'var(--player)', 20);
+            // 绘制主角
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            // 主角眼睛（看朝向）
             ctx.fillStyle = '#fff';
-            ctx.fillRect(player.x + 6, player.y + 6, PLAYER_SIZE - 12, PLAYER_SIZE - 12);
+            if (player.vx >= 0) { ctx.fillRect(player.x + 18, player.y + 6, 6, 6); } 
+            else { ctx.fillRect(player.x + 6, player.y + 6, 6, 6); }
+
+            ctx.restore();
         }
 
         function loop() {
+            if (!isGameRunning) return;
             update();
             draw();
             gameLoop = requestAnimationFrame(loop);
         }
 
-        // ---------------- 界面与控制逻辑 ----------------
+        // ---------------- 系统机制 ----------------
+        function handleDeath() {
+            isGameRunning = false;
+            lives--;
+            document.getElementById('lives').innerText = lives;
+            
+            if (lives <= 0) {
+                showScreen("GAME OVER", "你的生命值耗尽了...", "重新开始", () => {
+                    currentLevel = 0; score = 0; lives = 3; loadLevel(0);
+                });
+            } else {
+                showScreen("YOU DIED", "小心点！还剩 " + lives + " 条命", "复活", () => {
+                    loadLevel(currentLevel); // 重新加载当前关卡
+                });
+            }
+        }
 
-        function showWinScreen() {
+        let nextActionCb = null;
+        function showScreen(title, desc, btnText, callback) {
             cancelAnimationFrame(gameLoop);
-            document.getElementById('final-deaths').innerText = deaths;
-            document.getElementById('win-screen').style.display = 'flex';
+            document.getElementById('msg-title').innerText = title;
+            document.getElementById('msg-desc').innerText = desc;
+            document.getElementById('msg-btn').innerText = btnText;
+            document.getElementById('message-screen').style.display = 'flex';
+            nextActionCb = callback;
         }
 
-        window.restartGame = function() {
-            document.getElementById('win-screen').style.display = 'none';
-            currentLevel = 0;
-            deaths = 0;
-            loadLevel(currentLevel);
-            loop();
+        window.nextAction = function() {
+            document.getElementById('message-screen').style.display = 'none';
+            if(nextActionCb) nextActionCb();
         }
 
-        // 键盘监听
-        window.addEventListener('keydown', e => { if (keys.hasOwnProperty(e.key)) keys[e.key] = true; });
-        window.addEventListener('keyup', e => { if (keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+        // ---------------- 控制绑定 ----------------
+        // PC 键盘
+        window.addEventListener('keydown', e => {
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
+            if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') keys.up = true;
+        });
+        window.addEventListener('keyup', e => {
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
+            if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') keys.up = false;
+        });
 
-        // 手机虚拟按键监听 (使用 touch 避免 300ms 延迟)
-        const bindDpad = (id, keyName) => {
+        // 手机触摸
+        const bindTouch = (id, keyName) => {
             const btn = document.getElementById(id);
             btn.addEventListener('touchstart', e => { e.preventDefault(); keys[keyName] = true; });
             btn.addEventListener('touchend', e => { e.preventDefault(); keys[keyName] = false; });
-            btn.addEventListener('mousedown', e => { e.preventDefault(); keys[keyName] = true; });
-            btn.addEventListener('mouseup', e => { e.preventDefault(); keys[keyName] = false; });
+            btn.addEventListener('mousedown', e => { keys[keyName] = true; }); // 兼容PC鼠标点击测试
+            btn.addEventListener('mouseup', e => { keys[keyName] = false; });
             btn.addEventListener('mouseleave', e => { keys[keyName] = false; });
         };
-        bindDpad('btn-up', 'ArrowUp');
-        bindDpad('btn-down', 'ArrowDown');
-        bindDpad('btn-left', 'ArrowLeft');
-        bindDpad('btn-right', 'ArrowRight');
+        bindTouch('btn-left', 'left');
+        bindTouch('btn-right', 'right');
+        bindTouch('btn-jump', 'up');
 
-        // 启动！
+        // 启动第一关！
         loadLevel(0);
-        loop();
 
     </script>
 </body>
