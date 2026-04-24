@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>海克斯飞鸟 - 科技强化版</title>
+    <title>海克斯飞鸟 - 豪华商店版</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
 
         body {
-            background-color: #1a1a2e; 
+            background-color: #0f172a; 
             display: flex; justify-content: center; align-items: center;
             height: 100vh; overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -29,92 +29,124 @@
             z-index: 10;
         }
 
+        /* 顶部栏 */
+        .top-bar {
+            position: absolute; top: 15px; left: 15px; right: 15px;
+            display: flex; justify-content: space-between; z-index: 20;
+            pointer-events: none;
+        }
+        .coin-display {
+            background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px;
+            color: #fce78b; font-weight: bold; font-size: 16px; border: 1px solid #c5a059;
+        }
+        .shop-btn {
+            background: #f26d21; border: 2px solid #fff; border-radius: 20px; padding: 5px 15px;
+            color: white; font-weight: bold; cursor: pointer; pointer-events: auto; box-shadow: 0 2px 0 #cf5511;
+        }
+
         .score-board {
-            position: absolute; top: 10%; width: 100%; text-align: center;
+            position: absolute; top: 15%; width: 100%; text-align: center;
             font-size: 50px; font-weight: 900; color: #fff;
             -webkit-text-stroke: 2px #543847; text-shadow: 2px 2px 0 #543847, 0 4px 10px rgba(0,0,0,0.3);
             z-index: 5; pointer-events: none;
         }
 
-        /* 核心修复：移除了 display: none，让它跟着父级浮层一起显示 */
-        .game-over-panel {
-            background: #ded895; border: 3px solid #543847; border-radius: 10px;
-            padding: 20px 30px; text-align: center; box-shadow: 0 8px 0 rgba(0,0,0,0.2);
-            transform: translateY(20px); animation: popUp 0.3s forwards; pointer-events: auto;
+        /* 面板通用样式 */
+        .panel {
+            background: #ded895; border: 3px solid #543847; border-radius: 12px;
+            padding: 20px; text-align: center; box-shadow: 0 8px 0 rgba(0,0,0,0.2);
+            pointer-events: auto; width: 85%; max-width: 320px;
         }
-        @keyframes popUp { to { transform: translateY(0); } }
+        .panel-title { color: #f26d21; font-size: 26px; font-weight: 900; -webkit-text-stroke: 1px #fff; margin-bottom: 15px; }
         
-        .panel-title { color: #f26d21; font-size: 28px; font-weight: 900; -webkit-text-stroke: 1px #fff; margin-bottom: 15px; }
-        .score-box { background: #ceb572; border-radius: 5px; padding: 10px; margin-bottom: 15px; border: 2px solid #a98547;}
-        .score-label { color: #543847; font-size: 14px; font-weight: bold; }
+        /* 商店界面 */
+        #shop-screen { background: rgba(0,0,0,0.8); display: none; }
+        .skin-item {
+            background: #ceb572; border: 2px solid #a98547; border-radius: 8px; padding: 10px;
+            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .skin-item.active { border-color: #f26d21; background: #e8d08c; box-shadow: 0 0 10px #f26d21; }
+        .skin-name { font-weight: bold; color: #543847; }
+        .skin-btn {
+            padding: 5px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;
+        }
+        .btn-buy { background: #10b981; color: white; }
+        .btn-equip { background: #3b82f6; color: white; }
+        .btn-equipped { background: #94a3b8; color: white; }
+        .close-btn { background: #ef4444; color: white; padding: 8px 20px; border:none; border-radius: 20px; font-weight:bold; margin-top: 10px; cursor:pointer;}
+
+        /* 结算界面 & 排行榜 */
+        #game-over-screen { background: rgba(0,0,0,0.5); display: none; }
+        .score-box { background: #ceb572; border-radius: 5px; padding: 10px; margin-bottom: 10px; border: 2px solid #a98547;}
         .score-number { color: #fff; font-size: 32px; font-weight: 900; -webkit-text-stroke: 1px #543847; }
+        .leaderboard { text-align: left; background: rgba(0,0,0,0.1); padding: 5px; border-radius: 5px; margin-bottom: 15px; font-size: 12px; color: #543847; font-weight: bold;}
+        .lb-item { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.1); padding: 3px 0; }
         
         .play-btn {
             background: #f26d21; border: 2px solid #fff; color: #fff; font-size: 18px; font-weight: bold;
-            padding: 10px 30px; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 0 #cf5511; transition: 0.1s;
-            margin-top: 5px; width: 100%;
+            padding: 10px 0; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 0 #cf5511; transition: 0.1s; width: 100%;
         }
         .play-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #cf5511; }
 
-        .ready-msg { color: #fff; font-size: 24px; font-weight: bold; -webkit-text-stroke: 1px #543847; text-align: center; animation: blink 1s infinite; }
+        .ready-msg { color: #fff; font-size: 22px; font-weight: bold; -webkit-text-stroke: 1px #543847; text-align: center; animation: blink 1s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        #hextech-screen {
-            background: rgba(10, 15, 30, 0.85);
-            backdrop-filter: blur(5px);
-            display: none; 
-            padding: 20px;
-            pointer-events: auto;
-        }
-        .hex-title {
-            color: #00ffcc; font-size: 24px; font-weight: 900; margin-bottom: 20px;
-            text-shadow: 0 0 10px rgba(0,255,204,0.5); letter-spacing: 2px;
-        }
-        .hex-container {
-            display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 320px;
-        }
+        /* 海克斯界面 */
+        #hextech-screen { background: rgba(10, 15, 30, 0.85); backdrop-filter: blur(5px); display: none; pointer-events: auto; }
+        .hex-title { color: #00ffcc; font-size: 24px; font-weight: 900; margin-bottom: 15px; text-shadow: 0 0 10px rgba(0,255,204,0.5); }
+        .hex-container { display: flex; flex-direction: column; gap: 12px; width: 85%; max-width: 320px; }
         .hex-card {
             background: linear-gradient(135deg, rgba(30, 40, 60, 0.9) 0%, rgba(15, 20, 35, 0.9) 100%);
-            border: 2px solid #c5a059; border-radius: 12px; padding: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 0 10px rgba(197, 160, 89, 0.2);
-            color: white; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden;
+            border: 2px solid #c5a059; border-radius: 12px; padding: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); color: white; cursor: pointer;
         }
-        .hex-card::before {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: linear-gradient(transparent, rgba(255,255,255,0.1), transparent);
-            transform: rotate(45deg); transition: 0.5s; opacity: 0;
-        }
-        .hex-card:active { transform: scale(0.95); border-color: #00ffcc; }
-        .hex-name { color: #fce78b; font-size: 18px; font-weight: bold; margin-bottom: 5px; }
-        .hex-desc { color: #a0b0c0; font-size: 13px; line-height: 1.4; }
+        .hex-name { color: #fce78b; font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+        .hex-desc { color: #a0b0c0; font-size: 12px; line-height: 1.3; }
 
     </style>
 </head>
 <body>
 
     <div id="game-container">
+        <div class="top-bar" id="top-bar">
+            <div class="coin-display">🪙 <span id="coin-amount">0</span></div>
+            <button class="shop-btn" id="shop-open-btn">商店</button>
+        </div>
+
         <div class="score-board" id="current-score">0</div>
         <canvas id="gameCanvas"></canvas>
 
         <div class="ui-layer" id="start-screen">
-            <div style="font-size: 40px; color: #fff; font-weight: 900; -webkit-text-stroke: 2px #543847; margin-bottom: 50px;">Flappy Bird</div>
+            <div style="font-size: 40px; color: #fff; font-weight: 900; -webkit-text-stroke: 2px #543847; margin-bottom: 50px;">Flappy Hex</div>
             <div class="ready-msg">点击屏幕<br>选取海克斯强化</div>
         </div>
 
+        <div class="ui-layer" id="shop-screen">
+            <div class="panel">
+                <div class="panel-title">皮肤商店</div>
+                <div style="margin-bottom: 10px; font-weight: bold; color: #543847;">拥有金币: <span id="shop-coins" style="color:#f26d21;">0</span></div>
+                <div id="skin-list"></div>
+                <button class="close-btn" id="shop-close-btn">关闭</button>
+            </div>
+        </div>
+
         <div class="ui-layer" id="hextech-screen">
-            <div class="hex-title">✦ 选取海克斯强化 ✦</div>
+            <div class="hex-title">✦ 选取海克斯 ✦</div>
             <div class="hex-container" id="hex-container"></div>
         </div>
 
-        <div class="ui-layer" id="game-over-screen" style="display: none; background: rgba(0,0,0,0.5);">
-            <div class="game-over-panel" id="panel">
+        <div class="ui-layer" id="game-over-screen">
+            <div class="panel">
                 <div class="panel-title">GAME OVER</div>
                 <div class="score-box">
-                    <div class="score-label">SCORE</div>
+                    <div style="color: #543847; font-weight: bold;">SCORE</div>
                     <div class="score-number" id="final-score">0</div>
-                    <div class="score-label" style="margin-top: 10px;">BEST</div>
-                    <div class="score-number" id="best-score">0</div>
+                    <div style="font-size: 12px; color: #a98547; margin-top: 5px;">+(<span id="earned-coins">0</span> 🪙)</div>
                 </div>
+                
+                <div class="leaderboard" id="leaderboard-box">
+                    </div>
+
                 <button class="play-btn" id="restart-btn">PLAY AGAIN</button>
             </div>
         </div>
@@ -124,13 +156,7 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const container = document.getElementById('game-container');
-        const currentScoreEl = document.getElementById('current-score');
-        const startScreen = document.getElementById('start-screen');
-        const gameOverScreen = document.getElementById('game-over-screen');
-        const hexScreen = document.getElementById('hextech-screen');
-        const hexContainer = document.getElementById('hex-container');
-        const restartBtn = document.getElementById('restart-btn');
-
+        
         function resize() {
             canvas.width = container.clientWidth;
             canvas.height = container.clientHeight;
@@ -138,45 +164,69 @@
         window.addEventListener('resize', resize);
         resize();
 
-        let bestScore = 0;
-        try { bestScore = parseInt(localStorage.getItem('flappyHexBest')) || 0; } catch(e) {}
+        // --- 数据存储系统 ---
+        let myCoins = 0;
+        let unlockedSkins = ['default'];
+        let currentSkin = 'default';
+        let scoreHistory = [];
 
-        const BASE_GRAVITY = 0.25;
-        const BASE_JUMP = -5.5;
-        const BASE_SPEED = 2.5;
+        try {
+            myCoins = parseInt(localStorage.getItem('hexCoins')) || 0;
+            unlockedSkins = JSON.parse(localStorage.getItem('hexSkins')) || ['default'];
+            currentSkin = localStorage.getItem('hexCurrentSkin') || 'default';
+            scoreHistory = JSON.parse(localStorage.getItem('hexHistory')) || [];
+        } catch(e) {}
+
+        function saveData() {
+            try {
+                localStorage.setItem('hexCoins', myCoins);
+                localStorage.setItem('hexSkins', JSON.stringify(unlockedSkins));
+                localStorage.setItem('hexCurrentSkin', currentSkin);
+                localStorage.setItem('hexHistory', JSON.stringify(scoreHistory));
+            } catch(e) {}
+        }
+
+        document.getElementById('coin-amount').innerText = myCoins;
+
+        // --- 降低的初始难度配置 ---
+        const BASE_GRAVITY = 0.20;   // 原0.25 -> 下落更慢
+        const BASE_JUMP = -4.8;      // 原-5.5 -> 跳跃柔和
+        const BASE_SPEED = 2.0;      // 原2.5 -> 水管变慢
         const BASE_RADIUS = 12;
-        const BASE_GAP = 130;
+        const BASE_GAP = 160;        // 原130 -> 间距变大，极易穿过
 
-        let frames = 0;
-        let score = 0;
-        let gameState = 'START'; 
-        
+        let frames = 0, score = 0, gameState = 'START'; 
         let sys = {
             gravity: BASE_GRAVITY, jumpStrength: BASE_JUMP, speed: BASE_SPEED,
-            gap: BASE_GAP, scoreMult: 1, shield: 0
+            gap: BASE_GAP, scoreMult: 1, shield: 0, coinMult: 1
         };
 
+        // --- 12种海克斯科技 ---
         const AUGMENTS = [
-            { id: 'feather', icon: '🪶', name: '羽毛轻盈', desc: '小鸟受到的重力降低 20%，手感更飘逸。', apply: () => sys.gravity *= 0.8 },
-            { id: 'shield', icon: '🛡️', name: '钢铁之翼', desc: '获得一层护盾。首次撞击水管时免死并撞碎该水管。', apply: () => sys.shield = 1 },
-            { id: 'slow', icon: '⏳', name: '时空裂隙', desc: '水管移动速度降低 20%，给你更多反应时间。', apply: () => sys.speed *= 0.8 },
-            { id: 'greed', icon: '💰', name: '贪婪之手', desc: '每次穿过水管获得 2 分。', apply: () => sys.scoreMult = 2 },
-            { id: 'slim', icon: '🏃', name: '苗条身材', desc: '小鸟的碰撞体积缩小 20%，更容易穿过极限缝隙。', apply: () => bird.radius *= 0.8 },
-            { id: 'jump', icon: '🚀', name: '强健体魄', desc: '跳跃力度增加 15%。', apply: () => sys.jumpStrength *= 1.15 },
-            { id: 'wide', icon: '🛣️', name: '宽阔航道', desc: '上下水管的间距拉大 25%。', apply: () => sys.gap *= 1.25 },
-            { id: 'headstart', icon: '🎁', name: '抢占先机', desc: '开局直接获得 5 分。', apply: () => { score = 5; currentScoreEl.innerText = score; } }
+            { id: 'feather', icon: '🪶', name: '羽毛轻盈', desc: '重力降低 20%。', apply: () => sys.gravity *= 0.8 },
+            { id: 'shield', icon: '🛡️', name: '钢铁之翼', desc: '获得1层护盾，免死一次并撞碎水管。', apply: () => sys.shield = 1 },
+            { id: 'slow', icon: '⏳', name: '时空裂隙', desc: '水管移动速度降低 20%。', apply: () => sys.speed *= 0.8 },
+            { id: 'greed', icon: '💯', name: '贪婪之手', desc: '每次穿过水管获得 2 分。', apply: () => sys.scoreMult = 2 },
+            { id: 'slim', icon: '🏃', name: '迷你化', desc: '体积缩小 30%。', apply: () => bird.radius *= 0.7 },
+            { id: 'wide', icon: '🛣️', name: '宽阔航道', desc: '水管间距增加 25%。', apply: () => sys.gap *= 1.25 },
+            { id: 'headstart', icon: '🎁', name: '抢占先机', desc: '开局直接获得 10 分。', apply: () => { score = 10; updateScoreUI(); } },
+            { id: 'invest', icon: '🤑', name: '理财大师', desc: '本局获得的海克斯金币翻倍！', apply: () => sys.coinMult = 2 },
+            { id: 'risk', icon: '☠️', name: '风险投资', desc: '间距变窄10%，但每次穿过得3分。', apply: () => { sys.gap *= 0.9; sys.scoreMult = 3; } },
+            { id: 'phoenix', icon: '🦅', name: '不死鸟', desc: '每获得15分，自动生成一层护盾。', apply: () => sys.phoenix = true }
         ];
 
         let currentChoices = [];
 
         function triggerHextech() {
             gameState = 'HEXTECH';
-            startScreen.style.display = 'none';
-            hexScreen.style.display = 'flex';
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('top-bar').style.display = 'none';
+            document.getElementById('hextech-screen').style.display = 'flex';
             
             const shuffled = [...AUGMENTS].sort(() => 0.5 - Math.random());
             currentChoices = shuffled.slice(0, 3);
             
+            const hexContainer = document.getElementById('hex-container');
             hexContainer.innerHTML = '';
             currentChoices.forEach((aug, index) => {
                 const card = document.createElement('div');
@@ -187,7 +237,7 @@
                     e.stopPropagation();
                     if(e.cancelable) e.preventDefault();
                     currentChoices[index].apply();
-                    hexScreen.style.display = 'none';
+                    document.getElementById('hextech-screen').style.display = 'none';
                     gameState = 'PLAYING';
                     bird.flap();
                 };
@@ -196,6 +246,34 @@
                 hexContainer.appendChild(card);
             });
         }
+
+        // --- 皮肤系统绘制 ---
+        const skins = {
+            'default': { cost: 0, name: '经典小黄鸟', render: (b) => {
+                ctx.fillStyle = '#f4ce42'; ctx.beginPath(); ctx.arc(0, 0, b.radius, 0, Math.PI*2); ctx.fill();
+                ctx.lineWidth = 2; ctx.strokeStyle = '#543847'; ctx.stroke();
+                // 嘴
+                ctx.fillStyle = '#f26d21'; ctx.beginPath(); ctx.moveTo(8, -2); ctx.lineTo(18, 2); ctx.lineTo(8, 6); ctx.closePath(); ctx.fill(); ctx.stroke();
+                // 眼
+                ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(6, -4, 4, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(7, -4, 1.5, 0, Math.PI*2); ctx.fill();
+            }},
+            'ninja': { cost: 100, name: '暗影忍者', render: (b) => {
+                ctx.fillStyle = '#2c3e50'; ctx.beginPath(); ctx.arc(0, 0, b.radius, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = '#111'; ctx.stroke();
+                // 红色头带
+                ctx.fillStyle = '#e74c3c'; ctx.fillRect(-b.radius, -6, b.radius*2, 4);
+                // 忍者眼
+                ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(6, -2, 3, 0, Math.PI*2); ctx.fill();
+            }},
+            'mecha': { cost: 300, name: '源计划机甲', render: (b) => {
+                ctx.fillStyle = '#95a5a6'; ctx.fillRect(-b.radius, -b.radius, b.radius*2, b.radius*2);
+                ctx.strokeStyle = '#2c3e50'; ctx.strokeRect(-b.radius, -b.radius, b.radius*2, b.radius*2);
+                // 机械眼
+                ctx.fillStyle = '#00ffcc'; ctx.fillRect(4, -5, 6, 4);
+                ctx.shadowBlur = 10; ctx.shadowColor = '#00ffcc'; ctx.fill(); ctx.shadowBlur = 0;
+            }}
+        };
 
         const bird = {
             x: 50, y: 150, radius: BASE_RADIUS, velocity: 0, rotation: 0,
@@ -213,19 +291,10 @@
                     ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(0, 255, 204, 0.8)'; ctx.stroke();
                 }
 
-                ctx.fillStyle = '#f4ce42';
-                ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill();
-                ctx.lineWidth = 2; ctx.strokeStyle = '#543847'; ctx.stroke();
+                // 渲染不同皮肤
+                skins[currentSkin].render(this);
 
-                ctx.fillStyle = '#f26d21';
-                ctx.beginPath(); ctx.moveTo(8, -2); ctx.lineTo(18, 2); ctx.lineTo(8, 6); ctx.closePath();
-                ctx.fill(); ctx.stroke();
-
-                ctx.fillStyle = '#fff';
-                ctx.beginPath(); ctx.arc(6, -4, 4, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-                ctx.fillStyle = '#000';
-                ctx.beginPath(); ctx.arc(7, -4, 1.5, 0, Math.PI*2); ctx.fill();
-
+                // 翅膀通用
                 ctx.fillStyle = '#fff';
                 let wingY = (gameState === 'PLAYING' && frames % 10 < 5) ? 2 : -2; 
                 ctx.beginPath(); ctx.ellipse(-4, wingY, 6, 4, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
@@ -236,10 +305,7 @@
             update() {
                 this.velocity += sys.gravity;
                 this.y += this.velocity;
-                if (this.y + this.radius >= canvas.height - 100) {
-                    this.y = canvas.height - 100 - this.radius;
-                    gameOver();
-                }
+                if (this.y + this.radius >= canvas.height - 100) { this.y = canvas.height - 100 - this.radius; gameOver(); }
                 if (this.y - this.radius <= 0) { this.y = this.radius; this.velocity = 0; }
             },
             flap() { this.velocity = sys.jumpStrength; }
@@ -249,19 +315,17 @@
             list: [], width: 50,
             draw() {
                 for (let p of this.list) {
-                    const capHeight = 20; const capOut = 4; 
                     const drawCylinder = (x, y, w, h) => {
                         ctx.fillStyle = '#73bf2e'; ctx.fillRect(x, y, w, h);
                         ctx.fillStyle = '#9cce59'; ctx.fillRect(x + 5, y, 5, h);
                         ctx.fillStyle = '#558022'; ctx.fillRect(x + w - 10, y, 10, h);
                         ctx.lineWidth = 2; ctx.strokeStyle = '#543847'; ctx.strokeRect(x, y, w, h);
                     };
-
                     drawCylinder(p.x, 0, this.width, p.top);
-                    drawCylinder(p.x - capOut/2, p.top - capHeight, this.width + capOut, capHeight); 
+                    drawCylinder(p.x - 2, p.top - 20, this.width + 4, 20); 
                     const bottomY = canvas.height - 100 - p.bottom;
                     drawCylinder(p.x, bottomY, this.width, p.bottom);
-                    drawCylinder(p.x - capOut/2, bottomY, this.width + capOut, capHeight); 
+                    drawCylinder(p.x - 2, bottomY, this.width + 4, 20); 
                 }
             },
             update() {
@@ -273,8 +337,7 @@
                 }
 
                 for (let i = 0; i < this.list.length; i++) {
-                    let p = this.list[i];
-                    p.x -= sys.speed;
+                    let p = this.list[i]; p.x -= sys.speed;
                     let hitbox = { x: bird.x - bird.radius + 3, y: bird.y - bird.radius + 3, w: bird.radius*2 - 6, h: bird.radius*2 - 6 };
                     
                     if (hitbox.x + hitbox.w > p.x && hitbox.x < p.x + this.width) {
@@ -282,15 +345,17 @@
                             if (sys.shield > 0) {
                                 sys.shield--; this.list.splice(i, 1); i--;
                                 bird.velocity = sys.jumpStrength * 0.5; continue;
-                            } else {
-                                gameOver();
-                            }
+                            } else { gameOver(); }
                         }
                     }
 
                     if (p.x + this.width < bird.x && !p.passed) {
                         score += sys.scoreMult; 
-                        currentScoreEl.innerText = score; p.passed = true;
+                        updateScoreUI();
+                        p.passed = true;
+                        
+                        // 不死鸟逻辑
+                        if(sys.phoenix && score % 15 === 0) sys.shield++;
                     }
                     if (p.x + this.width < 0) { this.list.shift(); i--; }
                 }
@@ -306,7 +371,6 @@
                 ctx.fillStyle = '#73bf2e'; ctx.fillRect(0, canvas.height - 100, canvas.width, 15);
                 ctx.lineWidth = 2; ctx.strokeStyle = '#543847';
                 ctx.beginPath(); ctx.moveTo(0, canvas.height - 100); ctx.lineTo(canvas.width, canvas.height - 100); ctx.stroke();
-
                 ctx.strokeStyle = '#c6bc5b'; ctx.lineWidth = 3;
                 for (let i = 0; i < canvas.width + 50; i += 30) {
                     ctx.beginPath(); ctx.moveTo(i + this.groundX, canvas.height - 85); ctx.lineTo(i + 20 + this.groundX, canvas.height); ctx.stroke();
@@ -315,50 +379,127 @@
             update() { if(gameState === 'PLAYING') this.groundX = (this.groundX - sys.speed) % 30; }
         };
 
+        function updateScoreUI() { document.getElementById('current-score').innerText = score; }
+
         function gameOver() {
             if (gameState === 'GAMEOVER') return;
             gameState = 'GAMEOVER';
             
-            if (score > bestScore) {
-                bestScore = score;
-                try { localStorage.setItem('flappyHexBest', bestScore); } catch(e) {}
-            }
+            // 结算金币
+            let earned = score * sys.coinMult;
+            myCoins += earned;
+            document.getElementById('coin-amount').innerText = myCoins;
+            document.getElementById('earned-coins').innerText = earned;
+
+            // 历史排行榜更新
+            scoreHistory.push(score);
+            scoreHistory.sort((a,b) => b - a); // 降序
+            scoreHistory = scoreHistory.slice(0, 5); // 只留前五
+            saveData();
             
             document.getElementById('final-score').innerText = score;
-            document.getElementById('best-score').innerText = bestScore;
             
-            currentScoreEl.style.display = 'none';
-            setTimeout(() => { gameOverScreen.style.display = 'flex'; }, 300); 
+            // 渲染排行榜
+            const lbBox = document.getElementById('leaderboard-box');
+            lbBox.innerHTML = '<div style="margin-bottom:5px;">🏆 历史最高纪录</div>';
+            scoreHistory.forEach((s, idx) => {
+                lbBox.innerHTML += `<div class="lb-item"><span>TOP ${idx+1}</span><span>${s} 分</span></div>`;
+            });
+
+            document.getElementById('current-score').style.display = 'none';
+            setTimeout(() => { document.getElementById('game-over-screen').style.display = 'flex'; }, 300); 
         }
+
+        // --- 商店逻辑 ---
+        document.getElementById('shop-open-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('shop-coins').innerText = myCoins;
+            renderShop();
+            document.getElementById('shop-screen').style.display = 'flex';
+        });
+
+        document.getElementById('shop-close-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('shop-screen').style.display = 'none';
+        });
+
+        function renderShop() {
+            const list = document.getElementById('skin-list');
+            list.innerHTML = '';
+            for(let key in skins) {
+                let s = skins[key];
+                let isUnlocked = unlockedSkins.includes(key);
+                let isEquipped = currentSkin === key;
+                
+                let btnHtml = '';
+                if(isEquipped) {
+                    btnHtml = `<button class="skin-btn btn-equipped">已装备</button>`;
+                } else if(isUnlocked) {
+                    btnHtml = `<button class="skin-btn btn-equip" onclick="equipSkin('${key}', event)">装备</button>`;
+                } else {
+                    btnHtml = `<button class="skin-btn btn-buy" onclick="buySkin('${key}', ${s.cost}, event)">${s.cost} 🪙</button>`;
+                }
+
+                list.innerHTML += `
+                    <div class="skin-item ${isEquipped ? 'active' : ''}">
+                        <span class="skin-name">${s.name}</span>
+                        ${btnHtml}
+                    </div>
+                `;
+            }
+        }
+
+        window.buySkin = function(key, cost, e) {
+            e.stopPropagation();
+            if(myCoins >= cost) {
+                myCoins -= cost;
+                unlockedSkins.push(key);
+                document.getElementById('shop-coins').innerText = myCoins;
+                document.getElementById('coin-amount').innerText = myCoins;
+                saveData();
+                renderShop();
+            } else {
+                alert("金币不足！多去飞几把赚金币吧！");
+            }
+        };
+
+        window.equipSkin = function(key, e) {
+            e.stopPropagation();
+            currentSkin = key;
+            saveData();
+            renderShop();
+            drawFrame(); // 更新画面
+        };
 
         const restartFn = (e) => {
             e.stopPropagation();
             if(e.cancelable) e.preventDefault();
             
-            sys.gravity = BASE_GRAVITY; sys.jumpStrength = BASE_JUMP; sys.speed = BASE_SPEED;
-            sys.gap = BASE_GAP; sys.scoreMult = 1; sys.shield = 0; bird.radius = BASE_RADIUS;
-
-            bird.y = canvas.height / 2; bird.velocity = 0; bird.rotation = 0;
+            sys = { gravity: BASE_GRAVITY, jumpStrength: BASE_JUMP, speed: BASE_SPEED, gap: BASE_GAP, scoreMult: 1, shield: 0, coinMult: 1, phoenix: false };
+            bird.radius = BASE_RADIUS; bird.y = canvas.height / 2; bird.velocity = 0; bird.rotation = 0;
             pipes.reset(); score = 0; frames = 0;
             
-            currentScoreEl.innerText = score; currentScoreEl.style.display = 'block';
-            gameOverScreen.style.display = 'none'; startScreen.style.display = 'flex';
+            updateScoreUI(); document.getElementById('current-score').style.display = 'block';
+            document.getElementById('game-over-screen').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'flex';
+            document.getElementById('top-bar').style.display = 'flex';
             gameState = 'START';
         };
-        restartBtn.addEventListener('mousedown', restartFn);
-        restartBtn.addEventListener('touchstart', restartFn, {passive: false});
+        document.getElementById('restart-btn').addEventListener('mousedown', restartFn);
+        document.getElementById('restart-btn').addEventListener('touchstart', restartFn, {passive: false});
 
-        function loop() {
+        function drawFrame() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             bg.update(); bg.draw();
             pipes.draw(); bird.draw();
+        }
 
+        function loop() {
+            drawFrame();
             if (gameState === 'PLAYING') {
                 pipes.update(); bird.update(); frames++;
             } else if (gameState === 'GAMEOVER') {
-                if (bird.y + bird.radius < canvas.height - 100) {
-                    bird.velocity += sys.gravity * 1.5; bird.y += bird.velocity;
-                }
+                if (bird.y + bird.radius < canvas.height - 100) { bird.velocity += sys.gravity * 1.5; bird.y += bird.velocity; }
             } else if (gameState === 'START' || gameState === 'HEXTECH') {
                 bird.y = (canvas.height / 2) + Math.sin(frames * 0.05) * 5; frames++;
             }
@@ -366,7 +507,8 @@
         }
 
         function action(e) {
-            if (e.target && (e.target.tagName === 'BUTTON' || (e.target.closest && e.target.closest('.hex-card')))) return;
+            // 防误触UI层
+            if (e.target && (e.target.tagName === 'BUTTON' || (e.target.closest && e.target.closest('.ui-layer')))) return;
             if (e.type === 'keydown' && e.code !== 'Space') return;
             if (e.cancelable && (e.type === 'touchstart' || e.code === 'Space')) e.preventDefault();
             
