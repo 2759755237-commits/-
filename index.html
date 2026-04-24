@@ -3,506 +3,430 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>像素大冒险 - 横版闯关</title>
+    <title>飞翔的小鸟 - 精致重制版</title>
     <style>
-        :root {
-            --sky: #87CEEB;     /* 天空蓝 */
-            --ground: #4CAF50;  /* 草地绿 */
-            --dirt: #795548;    /* 泥土棕 */
-            --player: #F44336;  /* 主角红 */
-            --enemy: #9C27B0;   /* 怪物紫 */
-            --coin: #FFEB3B;    /* 金币黄 */
-            --flag: #2196F3;    /* 终点蓝 */
-        }
-
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
 
         body {
-            background-color: #222;
-            color: #fff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #2c3e50;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             height: 100vh;
             overflow: hidden;
-            touch-action: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: none; /* 防止手机端双击放大或滑动 */
         }
 
-        .hud {
+        #game-container {
+            position: relative;
             width: 100%;
-            max-width: 800px;
+            max-width: 420px; /* 经典竖屏比例 */
+            height: 100%;
+            max-height: 750px;
+            background-color: #70c5ce; /* 经典天空蓝 */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* UI 遮罩层 */
+        .ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
             display: flex;
-            justify-content: space-between;
-            padding: 10px 20px;
-            font-size: 20px;
-            font-weight: bold;
-            background: #111;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             z-index: 10;
         }
 
-        .game-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 800px;
-            /* 保持 16:9 比例 */
-            aspect-ratio: 16 / 9;
-            background: var(--sky);
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        canvas { display: block; width: 100%; height: 100%; }
-
-        /* --- 手机端虚拟按键 --- */
-        .mobile-controls {
-            display: none;
+        /* 标题和分数 */
+        .score-board {
             position: absolute;
-            bottom: 20px;
+            top: 10%;
             width: 100%;
-            padding: 0 20px;
-            justify-content: space-between;
-            pointer-events: none; /* 让空白处不遮挡点击 */
+            text-align: center;
+            font-size: 50px;
+            font-weight: 900;
+            color: #fff;
+            -webkit-text-stroke: 2px #543847; /* 文字描边，复古感 */
+            text-shadow: 2px 2px 0 #543847, 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 5;
+            pointer-events: none;
         }
 
-        .ctrl-group { display: flex; gap: 15px; pointer-events: auto; }
-
-        .btn {
-            width: 60px; height: 60px;
-            background: rgba(255, 255, 255, 0.3);
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            color: white; font-size: 24px; font-weight: bold;
-            display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(4px);
-        }
-        .btn:active { background: rgba(255, 255, 255, 0.6); transform: scale(0.95); }
-        .btn-jump { width: 70px; height: 70px; border-radius: 16px; background: rgba(244, 67, 54, 0.4); border-color: rgba(244, 67, 54, 0.8);}
-        .btn-jump:active { background: rgba(244, 67, 54, 0.7); }
-
-        @media (pointer: coarse) {
-            .mobile-controls { display: flex; }
-            .game-wrapper { aspect-ratio: auto; height: 100%; max-height: 500px; }
+        /* 结算面板 */
+        .game-over-panel {
+            background: #ded895;
+            border: 3px solid #543847;
+            border-radius: 10px;
+            padding: 20px 30px;
+            text-align: center;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.2);
+            display: none; /* 初始隐藏 */
+            transform: translateY(20px);
+            animation: popUp 0.3s forwards;
         }
 
-        /* 浮层界面 (胜利/死亡) */
-        .overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: none; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 100;
+        @keyframes popUp {
+            to { transform: translateY(0); }
         }
-        .overlay h1 { font-size: 40px; margin-bottom: 10px; }
-        .overlay p { font-size: 18px; margin-bottom: 25px; color: #ccc; }
-        .overlay button {
-            padding: 12px 30px; font-size: 18px; font-weight: bold; background: #4CAF50;
-            color: #fff; border: none; border-radius: 8px; cursor: pointer;
+
+        .panel-title { color: #f26d21; font-size: 28px; font-weight: 900; -webkit-text-stroke: 1px #fff; margin-bottom: 15px; }
+        .score-box { background: #ceb572; border-radius: 5px; padding: 10px; margin-bottom: 15px; border: 2px solid #a98547;}
+        .score-label { color: #543847; font-size: 14px; font-weight: bold; }
+        .score-number { color: #fff; font-size: 32px; font-weight: 900; -webkit-text-stroke: 1px #543847; }
+        
+        .play-btn {
+            background: #f26d21;
+            border: 2px solid #fff;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 10px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #cf5511;
+            transition: 0.1s;
         }
+        .play-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #cf5511; }
+
+        /* 准备提示 */
+        .ready-msg {
+            color: #fff; font-size: 24px; font-weight: bold;
+            -webkit-text-stroke: 1px #543847;
+            text-align: center;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
     </style>
 </head>
 <body>
 
-    <div class="hud">
-        <div>SCORE: <span id="score">0</span></div>
-        <div>LEVEL: <span id="level">1</span>/3</div>
-        <div>LIVES: <span id="lives">3</span></div>
-    </div>
-
-    <div class="game-wrapper">
-        <canvas id="gameCanvas" width="800" height="450"></canvas>
+    <div id="game-container">
+        <div class="score-board" id="current-score">0</div>
         
-        <div class="mobile-controls">
-            <div class="ctrl-group">
-                <div class="btn" id="btn-left">◀</div>
-                <div class="btn" id="btn-right">▶</div>
-            </div>
-            <div class="ctrl-group">
-                <div class="btn btn-jump" id="btn-jump">UP</div>
-            </div>
+        <canvas id="gameCanvas"></canvas>
+
+        <div class="ui-layer" id="start-screen">
+            <div style="font-size: 40px; color: #fff; font-weight: 900; -webkit-text-stroke: 2px #543847; margin-bottom: 50px;">Flappy Bird</div>
+            <div class="ready-msg">点击屏幕<br>或按空格开始</div>
         </div>
 
-        <div class="overlay" id="message-screen">
-            <h1 id="msg-title">LEVEL CLEARED!</h1>
-            <p id="msg-desc">准备进入下一关</p>
-            <button id="msg-btn" onclick="nextAction()">继续</button>
+        <div class="ui-layer" id="game-over-screen" style="display: none; background: rgba(0,0,0,0.4);">
+            <div class="game-over-panel" id="panel">
+                <div class="panel-title">GAME OVER</div>
+                <div class="score-box">
+                    <div class="score-label">SCORE</div>
+                    <div class="score-number" id="final-score">0</div>
+                    <div class="score-label" style="margin-top: 10px;">BEST</div>
+                    <div class="score-number" id="best-score">0</div>
+                </div>
+                <button class="play-btn" onclick="resetGame()">PLAY AGAIN</button>
+            </div>
         </div>
     </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const currentScoreEl = document.getElementById('current-score');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
 
-        // 游戏核心常量
-        const GRAVITY = 0.6;
-        const FRICTION = 0.8;
-        const JUMP_POWER = -12;
-        const MOVE_SPEED = 5;
-        
-        // 游戏状态
-        let currentLevel = 0;
+        // 动态适配画布分辨率
+        let scale = 1;
+        function resize() {
+            const container = document.getElementById('game-container');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // 游戏核心参数
+        let frames = 0;
         let score = 0;
-        let lives = 3;
-        let gameLoop;
-        let cameraX = 0;
-        let isGameRunning = false;
+        let bestScore = localStorage.getItem('flappyBest') || 0;
+        let gameState = 'START'; // START, PLAYING, GAMEOVER
+        
+        // 物理参数
+        const gravity = 0.25;
+        const jumpStrength = -5.5;
+        const speed = 2.5;
 
-        let keys = { left: false, right: false, up: false };
+        // --- 手工绘制素材 ---
 
-        // 主角对象
-        let player = {
-            x: 50, y: 50, width: 30, height: 30,
-            vx: 0, vy: 0,
-            isGrounded: false,
-            color: 'var(--player)'
+        // 小鸟对象
+        const bird = {
+            x: 50, y: 150, radius: 12,
+            velocity: 0, rotation: 0,
+            wingPhase: 0,
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // 根据下落速度计算旋转角度 (低头/抬头)
+                this.rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, (this.velocity * 0.1)));
+                if(gameState === 'GAMEOVER') this.rotation = Math.PI / 2; // 死后直直朝下
+                ctx.rotate(this.rotation);
+
+                // 画身体 (黄色)
+                ctx.fillStyle = '#f4ce42';
+                ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill();
+                ctx.lineWidth = 2; ctx.strokeStyle = '#543847'; ctx.stroke();
+
+                // 画嘴巴 (橙色)
+                ctx.fillStyle = '#f26d21';
+                ctx.beginPath();
+                ctx.moveTo(8, -2); ctx.lineTo(18, 2); ctx.lineTo(8, 6); ctx.closePath();
+                ctx.fill(); ctx.stroke();
+
+                // 画眼睛
+                ctx.fillStyle = '#fff';
+                ctx.beginPath(); ctx.arc(6, -4, 4, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#000';
+                ctx.beginPath(); ctx.arc(7, -4, 1.5, 0, Math.PI*2); ctx.fill();
+
+                // 画翅膀 (动态扇动)
+                ctx.fillStyle = '#fff';
+                let wingY = (gameState === 'PLAYING' && frames % 10 < 5) ? 2 : -2; // 扇动逻辑
+                ctx.beginPath();
+                ctx.ellipse(-4, wingY, 6, 4, 0, 0, Math.PI*2);
+                ctx.fill(); ctx.stroke();
+
+                ctx.restore();
+            },
+
+            update() {
+                this.velocity += gravity;
+                this.y += this.velocity;
+
+                // 触底死亡 (地面高度为 canvas.height - 100)
+                if (this.y + this.radius >= canvas.height - 100) {
+                    this.y = canvas.height - 100 - this.radius;
+                    gameOver();
+                }
+                // 触顶限制
+                if (this.y - this.radius <= 0) {
+                    this.y = this.radius;
+                    this.velocity = 0;
+                }
+            },
+
+            flap() {
+                this.velocity = jumpStrength;
+            }
         };
 
-        // 地图元素容器
-        let platforms = [];
-        let enemies = [];
-        let coins = [];
-        let goal = { x: 0, y: 0, width: 40, height: 150 };
+        // 管道管理器
+        const pipes = {
+            list: [],
+            width: 50,
+            gap: 130, // 上下管子间距
 
-        // ---------------- 关卡设计器 ----------------
-        // 画布高度是 450。地面一般在 y: 400
-        const levels = [
-            {
-                // Level 1: 纯跳跃教学，没有怪物
-                width: 1500, // 地图总长度
-                start: { x: 50, y: 300 },
-                goal: { x: 1350, y: 250 },
-                platforms: [
-                    { x: 0, y: 400, w: 500, h: 50 },    // 出生点平地
-                    { x: 600, y: 400, w: 300, h: 50 },  // 跨过沟壑后的平地
-                    { x: 700, y: 300, w: 100, h: 20 },  // 悬空小台阶
-                    { x: 1000, y: 400, w: 500, h: 50 }  // 终点平地
-                ],
-                enemies: [],
-                coins: [
-                    { x: 300, y: 350, collected: false },
-                    { x: 735, y: 250, collected: false },
-                    { x: 1100, y: 350, collected: false }
-                ]
-            },
-            {
-                // Level 2: 引入怪物和高低差
-                width: 2000,
-                start: { x: 50, y: 300 },
-                goal: { x: 1850, y: 250 },
-                platforms: [
-                    { x: 0, y: 400, w: 600, h: 50 },
-                    { x: 400, y: 300, w: 150, h: 20 },
-                    { x: 750, y: 400, w: 400, h: 50 },
-                    { x: 1000, y: 250, w: 100, h: 20 },
-                    { x: 1300, y: 400, w: 700, h: 50 }
-                ],
-                enemies: [
-                    // 怪物会在 minX 和 maxX 之间巡逻
-                    { x: 450, y: 370, w: 30, h: 30, vx: 2, minX: 400, maxX: 550, alive: true },
-                    { x: 800, y: 370, w: 30, h: 30, vx: -2, minX: 750, maxX: 1100, alive: true }
-                ],
-                coins: [
-                    { x: 450, y: 250, collected: false },
-                    { x: 1035, y: 200, collected: false }
-                ]
-            },
-            {
-                // Level 3: 连续跳跃与怪物组合
-                width: 2500,
-                start: { x: 50, y: 300 },
-                goal: { x: 2350, y: 150 },
-                platforms: [
-                    { x: 0, y: 400, w: 400, h: 50 },
-                    { x: 500, y: 350, w: 150, h: 20 },
-                    { x: 750, y: 300, w: 150, h: 20 },
-                    { x: 1000, y: 250, w: 150, h: 20 }, // 阶梯向上
-                    { x: 1300, y: 400, w: 600, h: 50 },
-                    { x: 1500, y: 280, w: 100, h: 20 },
-                    { x: 2100, y: 400, w: 400, h: 50 },
-                    { x: 2300, y: 300, w: 150, h: 100 } // 终点高台
-                ],
-                enemies: [
-                    { x: 500, y: 320, w: 30, h: 30, vx: 1.5, minX: 500, maxX: 620, alive: true },
-                    { x: 1400, y: 370, w: 30, h: 30, vx: 2.5, minX: 1300, maxX: 1850, alive: true },
-                    { x: 1600, y: 370, w: 30, h: 30, vx: -2.5, minX: 1300, maxX: 1850, alive: true }
-                ],
-                coins: [
-                    { x: 810, y: 250, collected: false },
-                    { x: 1060, y: 200, collected: false },
-                    { x: 1535, y: 230, collected: false }
-                ]
-            }
-        ];
-
-        function loadLevel(index) {
-            if (index >= levels.length) {
-                showScreen("YOU WIN!", "恭喜通关所有地图！最终得分: " + score, "重新开始全关卡", () => {
-                    currentLevel = 0; score = 0; lives = 3; loadLevel(0);
-                });
-                return;
-            }
-            
-            const levelData = JSON.parse(JSON.stringify(levels[index])); // 深拷贝
-            
-            player.x = levelData.start.x;
-            player.y = levelData.start.y;
-            player.vx = 0; player.vy = 0;
-            
-            platforms = levelData.platforms;
-            enemies = levelData.enemies;
-            coins = levelData.coins;
-            goal = levelData.goal;
-            goal.width = 40; goal.height = 150; // 旗杆大小
-
-            cameraX = 0;
-            
-            document.getElementById('level').innerText = index + 1;
-            document.getElementById('score').innerText = score;
-            document.getElementById('lives').innerText = lives;
-            
-            isGameRunning = true;
-            loop();
-        }
-
-        // ---------------- 物理引擎与逻辑更新 ----------------
-        function update() {
-            if (!isGameRunning) return;
-
-            // 1. 玩家水平移动
-            if (keys.left) player.vx -= 1;
-            if (keys.right) player.vx += 1;
-            
-            player.vx *= FRICTION; // 摩擦力减速
-            
-            // 限制最大速度
-            if (player.vx > MOVE_SPEED) player.vx = MOVE_SPEED;
-            if (player.vx < -MOVE_SPEED) player.vx = -MOVE_SPEED;
-
-            player.x += player.vx;
-
-            // 限制玩家不能跑到地图最左边之外
-            if (player.x < 0) { player.x = 0; player.vx = 0; }
-
-            // 2. 玩家垂直移动 (重力)
-            player.vy += GRAVITY;
-            player.y += player.vy;
-
-            // 3. 平台碰撞检测 (AABB)
-            player.isGrounded = false;
-            for (let p of platforms) {
-                // 检查是否重叠
-                if (player.x < p.x + p.w && player.x + player.width > p.x &&
-                    player.y < p.y + p.h && player.y + player.height > p.y) {
+            draw() {
+                for (let p of this.list) {
+                    // 管子颜色和边框
+                    const capHeight = 20;
+                    const capOut = 4; // 管道头部凸出部分
                     
-                    // 从上往下掉落碰到平台 (踩在地上)
-                    if (player.vy > 0 && player.y + player.height - player.vy <= p.y + 5) {
-                        player.isGrounded = true;
-                        player.vy = 0;
-                        player.y = p.y - player.height;
-                    } 
-                    // 从下往上顶到平台 (顶头)
-                    else if (player.vy < 0 && player.y - player.vy >= p.y + p.h - 5) {
-                        player.vy = 0;
-                        player.y = p.y + p.h;
+                    // 绘制管道主体函数 (带立体高光)
+                    const drawCylinder = (x, y, w, h) => {
+                        ctx.fillStyle = '#73bf2e'; // 主绿
+                        ctx.fillRect(x, y, w, h);
+                        // 高光
+                        ctx.fillStyle = '#9cce59';
+                        ctx.fillRect(x + 5, y, 5, h);
+                        // 阴影
+                        ctx.fillStyle = '#558022';
+                        ctx.fillRect(x + w - 10, y, 10, h);
+                        // 边框
+                        ctx.lineWidth = 2; ctx.strokeStyle = '#543847';
+                        ctx.strokeRect(x, y, w, h);
+                    };
+
+                    // 上管
+                    drawCylinder(p.x, 0, this.width, p.top);
+                    drawCylinder(p.x - capOut/2, p.top - capHeight, this.width + capOut, capHeight); // 上管头
+                    
+                    // 下管 (地面高度预留100)
+                    const bottomY = canvas.height - 100 - p.bottom;
+                    drawCylinder(p.x, bottomY, this.width, p.bottom);
+                    drawCylinder(p.x - capOut/2, bottomY, this.width + capOut, capHeight); // 下管头
+                }
+            },
+
+            update() {
+                // 每隔 90 帧生成一对新管子
+                if (frames % 90 === 0) {
+                    let minHeight = 50;
+                    let maxPos = canvas.height - 100 - minHeight - this.gap;
+                    let topHeight = Math.max(minHeight, Math.random() * maxPos);
+                    
+                    this.list.push({
+                        x: canvas.width,
+                        top: topHeight,
+                        bottom: canvas.height - 100 - (topHeight + this.gap),
+                        passed: false
+                    });
+                }
+
+                for (let i = 0; i < this.list.length; i++) {
+                    let p = this.list[i];
+                    p.x -= speed;
+
+                    // 碰撞检测 (圆形与矩形的 AABB 简化)
+                    let birdHitbox = { x: bird.x - bird.radius + 4, y: bird.y - bird.radius + 4, w: bird.radius*2 - 8, h: bird.radius*2 - 8 };
+                    
+                    if (birdHitbox.x + birdHitbox.w > p.x && birdHitbox.x < p.x + this.width) {
+                        // 撞到上管 或 撞到下管
+                        if (birdHitbox.y < p.top || birdHitbox.y + birdHitbox.h > canvas.height - 100 - p.bottom) {
+                            gameOver();
+                        }
                     }
-                    // 水平碰撞 (撞墙)
-                    else {
-                        if (player.vx > 0) player.x = p.x - player.width; // 往右撞
-                        else if (player.vx < 0) player.x = p.x + p.w;     // 往左撞
-                        player.vx = 0;
+
+                    // 计分逻辑
+                    if (p.x + this.width < bird.x && !p.passed) {
+                        score++;
+                        currentScoreEl.innerText = score;
+                        p.passed = true;
+                    }
+
+                    // 移出屏幕的管子删除
+                    if (p.x + this.width < 0) {
+                        this.list.shift();
+                        i--;
                     }
                 }
-            }
+            },
+            reset() { this.list = []; }
+        };
 
-            // 4. 跳跃逻辑
-            if (keys.up && player.isGrounded) {
-                player.vy = JUMP_POWER;
-                player.isGrounded = false;
-            }
-
-            // 5. 掉入深渊检测
-            if (player.y > canvas.height + 100) {
-                handleDeath();
-            }
-
-            // 6. 怪物逻辑
-            for (let e of enemies) {
-                if (!e.alive) continue;
+        // 背景和地面
+        const bg = {
+            groundX: 0,
+            cityX: 0,
+            draw() {
+                // 绘制远景城市/云朵 (视差滚动，慢速)
+                ctx.fillStyle = '#d0f4f7'; // 浅色云带
+                ctx.fillRect(0, canvas.height - 150, canvas.width, 50);
                 
-                // 怪物巡逻
-                e.x += e.vx;
-                if (e.x < e.minX || e.x + e.w > e.maxX) e.vx *= -1;
+                // 绘制地面 (快速滚动)
+                ctx.fillStyle = '#ded895';
+                ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+                // 地面顶部草皮
+                ctx.fillStyle = '#73bf2e';
+                ctx.fillRect(0, canvas.height - 100, canvas.width, 15);
+                ctx.lineWidth = 2; ctx.strokeStyle = '#543847';
+                ctx.beginPath(); ctx.moveTo(0, canvas.height - 100); ctx.lineTo(canvas.width, canvas.height - 100); ctx.stroke();
 
-                // 主角与怪物碰撞
-                if (player.x < e.x + e.w && player.x + player.width > e.x &&
-                    player.y < e.y + e.h && player.y + player.height > e.y) {
-                    
-                    // 核心机制：如果主角在下落，且脚底高于怪物中心 -> 踩死怪物
-                    if (player.vy > 0 && player.y + player.height - player.vy < e.y + e.h / 2) {
-                        e.alive = false;
-                        player.vy = JUMP_POWER * 0.8; // 踩死后小弹跳
-                        score += 50;
-                        document.getElementById('score').innerText = score;
-                    } else {
-                        // 侧面碰到，主角死亡
-                        handleDeath();
-                    }
+                // 地面斜线纹理 (制造滚动感)
+                ctx.strokeStyle = '#c6bc5b';
+                ctx.lineWidth = 3;
+                for (let i = 0; i < canvas.width + 50; i += 30) {
+                    ctx.beginPath();
+                    ctx.moveTo(i + this.groundX, canvas.height - 85);
+                    ctx.lineTo(i + 20 + this.groundX, canvas.height);
+                    ctx.stroke();
+                }
+            },
+            update() {
+                if(gameState === 'PLAYING') {
+                    this.groundX = (this.groundX - speed) % 30; // 30 是纹理间距
                 }
             }
+        };
 
-            // 7. 金币收集
-            for (let c of coins) {
-                if (!c.collected && 
-                    player.x < c.x + 20 && player.x + player.width > c.x &&
-                    player.y < c.y + 20 && player.y + player.height > c.y) {
-                    c.collected = true;
-                    score += 10;
-                    document.getElementById('score').innerText = score;
-                }
+        // 核心游戏逻辑
+        function gameOver() {
+            if (gameState === 'GAMEOVER') return;
+            gameState = 'GAMEOVER';
+            
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('flappyBest', bestScore);
             }
-
-            // 8. 终点判定
-            if (player.x < goal.x + goal.width && player.x + player.width > goal.x &&
-                player.y < goal.y + goal.height && player.y + player.height > goal.y) {
-                isGameRunning = false;
-                score += 100;
-                showScreen("STAGE CLEAR!", "干得漂亮，得分: " + score, "下一关", () => {
-                    currentLevel++; loadLevel(currentLevel);
-                });
-            }
-
-            // 9. 镜头跟随处理 (主角跑到屏幕中右侧时滚动镜头)
-            if (player.x > cameraX + canvas.width * 0.4) {
-                cameraX = player.x - canvas.width * 0.4;
-            }
-            // 限制镜头不能往回倒退太多（可选），或者不能超出地图总长
-            const currentMapWidth = levels[currentLevel].width;
-            if (cameraX > currentMapWidth - canvas.width) cameraX = currentMapWidth - canvas.width;
-            if (cameraX < 0) cameraX = 0;
+            
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('best-score').innerText = bestScore;
+            
+            currentScoreEl.style.display = 'none';
+            setTimeout(() => { gameOverScreen.style.display = 'flex'; }, 300); // 延迟一点显示面板
         }
 
-        // ---------------- 渲染与绘制 ----------------
-        function draw() {
-            // 清空并填充天空背景
-            ctx.fillStyle = 'var(--sky)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.save();
-            // 应用镜头偏移 (只偏移X轴)
-            ctx.translate(-cameraX, 0);
-
-            // 绘制终点旗杆
-            ctx.fillStyle = 'var(--flag)';
-            ctx.fillRect(goal.x, goal.y, goal.width, goal.height);
-            ctx.fillStyle = '#fff'; // 旗帜
-            ctx.beginPath(); ctx.moveTo(goal.x, goal.y); ctx.lineTo(goal.x - 40, goal.y + 20); ctx.lineTo(goal.x, goal.y + 40); ctx.fill();
-
-            // 绘制平台 (带点草地和泥土的分层效果)
-            for (let p of platforms) {
-                ctx.fillStyle = 'var(--ground)';
-                ctx.fillRect(p.x, p.y, p.w, Math.min(15, p.h)); // 顶部草皮
-                if (p.h > 15) {
-                    ctx.fillStyle = 'var(--dirt)';
-                    ctx.fillRect(p.x, p.y + 15, p.w, p.h - 15); // 下面泥土
-                }
-            }
-
-            // 绘制金币
-            ctx.fillStyle = 'var(--coin)';
-            for (let c of coins) {
-                if (!c.collected) {
-                    ctx.beginPath(); ctx.arc(c.x + 10, c.y + 10, 10, 0, Math.PI*2); ctx.fill();
-                    ctx.fillStyle = '#fff'; ctx.fillRect(c.x + 7, c.y + 4, 6, 12); ctx.fillStyle = 'var(--coin)'; // 金币高光
-                }
-            }
-
-            // 绘制怪物
-            ctx.fillStyle = 'var(--enemy)';
-            for (let e of enemies) {
-                if (e.alive) {
-                    ctx.fillRect(e.x, e.y, e.w, e.h);
-                    // 给怪物画两个眼睛
-                    ctx.fillStyle = '#fff'; ctx.fillRect(e.x + 5, e.y + 5, 5, 5); ctx.fillRect(e.x + 20, e.y + 5, 5, 5); ctx.fillStyle = 'var(--enemy)';
-                }
-            }
-
-            // 绘制主角
-            ctx.fillStyle = player.color;
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-            // 主角眼睛（看朝向）
-            ctx.fillStyle = '#fff';
-            if (player.vx >= 0) { ctx.fillRect(player.x + 18, player.y + 6, 6, 6); } 
-            else { ctx.fillRect(player.x + 6, player.y + 6, 6, 6); }
-
-            ctx.restore();
+        function resetGame() {
+            bird.y = canvas.height / 2;
+            bird.velocity = 0;
+            bird.rotation = 0;
+            pipes.reset();
+            score = 0;
+            frames = 0;
+            currentScoreEl.innerText = score;
+            currentScoreEl.style.display = 'block';
+            gameOverScreen.style.display = 'none';
+            startScreen.style.display = 'flex';
+            gameState = 'START';
         }
 
         function loop() {
-            if (!isGameRunning) return;
-            update();
-            draw();
-            gameLoop = requestAnimationFrame(loop);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            bg.update();
+            bg.draw();
+            
+            pipes.draw();
+            bird.draw();
+
+            if (gameState === 'PLAYING') {
+                pipes.update();
+                bird.update();
+                frames++;
+            } else if (gameState === 'GAMEOVER') {
+                // 死后小鸟掉落地面
+                if (bird.y + bird.radius < canvas.height - 100) {
+                    bird.velocity += gravity * 1.5;
+                    bird.y += bird.velocity;
+                }
+            } else if (gameState === 'START') {
+                // 开始界面的小鸟上下浮动
+                bird.y = (canvas.height / 2) + Math.sin(frames * 0.05) * 5;
+                frames++;
+            }
+
+            requestAnimationFrame(loop);
         }
 
-        // ---------------- 系统机制 ----------------
-        function handleDeath() {
-            isGameRunning = false;
-            lives--;
-            document.getElementById('lives').innerText = lives;
+        // 控制逻辑
+        function action(e) {
+            if (e.type !== 'mousedown' && e.type !== 'touchstart' && e.code !== 'Space') return;
+            if (e.code === 'Space') e.preventDefault(); // 阻止空格滚动网页
             
-            if (lives <= 0) {
-                showScreen("GAME OVER", "你的生命值耗尽了...", "重新开始", () => {
-                    currentLevel = 0; score = 0; lives = 3; loadLevel(0);
-                });
-            } else {
-                showScreen("YOU DIED", "小心点！还剩 " + lives + " 条命", "复活", () => {
-                    loadLevel(currentLevel); // 重新加载当前关卡
-                });
+            if (gameState === 'START') {
+                gameState = 'PLAYING';
+                startScreen.style.display = 'none';
+                bird.flap();
+            } else if (gameState === 'PLAYING') {
+                bird.flap();
             }
         }
 
-        let nextActionCb = null;
-        function showScreen(title, desc, btnText, callback) {
-            cancelAnimationFrame(gameLoop);
-            document.getElementById('msg-title').innerText = title;
-            document.getElementById('msg-desc').innerText = desc;
-            document.getElementById('msg-btn').innerText = btnText;
-            document.getElementById('message-screen').style.display = 'flex';
-            nextActionCb = callback;
-        }
+        // 绑定事件 (兼容手机触摸、鼠标点击、键盘空格)
+        window.addEventListener('keydown', action);
+        canvas.addEventListener('mousedown', action);
+        canvas.addEventListener('touchstart', action, { passive: false });
 
-        window.nextAction = function() {
-            document.getElementById('message-screen').style.display = 'none';
-            if(nextActionCb) nextActionCb();
-        }
-
-        // ---------------- 控制绑定 ----------------
-        // PC 键盘
-        window.addEventListener('keydown', e => {
-            if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
-            if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
-            if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') keys.up = true;
-        });
-        window.addEventListener('keyup', e => {
-            if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
-            if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
-            if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') keys.up = false;
-        });
-
-        // 手机触摸
-        const bindTouch = (id, keyName) => {
-            const btn = document.getElementById(id);
-            btn.addEventListener('touchstart', e => { e.preventDefault(); keys[keyName] = true; });
-            btn.addEventListener('touchend', e => { e.preventDefault(); keys[keyName] = false; });
-            btn.addEventListener('mousedown', e => { keys[keyName] = true; }); // 兼容PC鼠标点击测试
-            btn.addEventListener('mouseup', e => { keys[keyName] = false; });
-            btn.addEventListener('mouseleave', e => { keys[keyName] = false; });
-        };
-        bindTouch('btn-left', 'left');
-        bindTouch('btn-right', 'right');
-        bindTouch('btn-jump', 'up');
-
-        // 启动第一关！
-        loadLevel(0);
+        // 首次启动
+        bird.y = canvas.height / 2;
+        loop();
 
     </script>
 </body>
