@@ -2,262 +2,285 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>私人数据中心</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>智能猜数仪</title>
     <style>
         :root {
-            --bg: #0f172a;           
-            --card-bg: #1e293b;      
-            --card-border: #334155;  
-            --text-main: #f8fafc;    
-            --text-sub: #94a3b8;     
-            --accent: #3b82f6;       
-            --rank-1: #ef4444;       
-            --rank-2: #f97316;
-            --rank-3: #eab308;
-            --rank-other: #64748b;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --text-main: #ffffff;
+            --accent: #00ffcc;
+            --error: #ff4d4f;
+            --warning: #faad14;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background-color: var(--bg);
+            background: var(--bg-gradient);
             color: var(--text-main);
             font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-            min-height: 100vh;
-            padding: 20px 10px;
-            overflow-y: auto; 
-            line-height: 1.5;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1000px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px;
-        }
-
-        .full-width { grid-column: 1 / -1; } 
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease;
-        }
-        .card:hover { transform: translateY(-2px); border-color: #475569; }
-
-        .card-label {
-            font-size: 12px;
-            font-weight: bold;
-            color: var(--text-sub);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 16px;
             display: flex;
+            justify-content: center;
             align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
         }
 
-        .time-box { text-align: center; padding: 30px 0; background: transparent; border: none; box-shadow: none; }
-        #time { font-size: clamp(60px, 8vw, 80px); font-weight: 800; letter-spacing: 2px; text-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        #date { font-size: 18px; color: var(--accent); font-weight: 500; margin-top: 8px; }
-
-        .weather-content { display: flex; justify-content: space-between; align-items: center; }
-        .temp { font-size: 56px; font-weight: 300; line-height: 1; }
-        .city { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
-
-        .luck-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-        .luck-badge { padding: 4px 10px; border-radius: 8px; font-size: 13px; font-weight: bold; color: #fff; }
-        .yi { background: #10b981; } .ji { background: #ef4444; }
-        
-        .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
-        .news-item {
-            display: flex; gap: 12px; padding: 12px 16px;
-            background: rgba(255,255,255,0.03); border-radius: 12px;
-            text-decoration: none; color: var(--text-main); font-size: 15px;
-            transition: background 0.2s;
-            align-items: flex-start;
+        .game-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px 30px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
         }
-        .news-item:hover { background: rgba(255,255,255,0.08); }
-        .news-title { overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        
-        .rank { font-weight: 900; font-size: 16px; font-style: italic; min-width: 20px; text-align: center; }
-        .rank-1 { color: var(--rank-1); } .rank-2 { color: var(--rank-2); } .rank-3 { color: var(--rank-3); }
-        .rank-other { color: var(--rank-other); }
 
-        .fallback-container { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
-        .fallback-btn {
-            background: var(--card-border); color: var(--text-main); text-decoration: none;
-            padding: 10px 20px; border-radius: 8px; font-size: 14px; transition: 0.2s;
+        h1 { font-size: 28px; font-weight: 700; margin-bottom: 5px; letter-spacing: 2px; }
+        .subtitle { font-size: 14px; color: rgba(255, 255, 255, 0.8); margin-bottom: 30px; }
+
+        .range-display {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--accent);
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: inline-block;
+            letter-spacing: 1px;
         }
-        .fallback-btn:hover { background: var(--accent); }
+
+        /* 隐藏输入框自带的上下小箭头 */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid transparent;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 24px;
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+            outline: none;
+            transition: 0.3s;
+        }
+        input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(0, 255, 204, 0.4); }
+
+        button {
+            width: 100%;
+            background: var(--accent);
+            color: #111;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            text-transform: uppercase;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 255, 204, 0.4); }
+        button:active { transform: translateY(1px); }
+
+        .message {
+            font-size: 16px;
+            font-weight: 500;
+            min-height: 24px;
+            margin-bottom: 20px;
+            transition: 0.3s;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 15px;
+        }
+
+        /* 胜利时的动画效果 */
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 255, 204, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(0, 255, 204, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 255, 204, 0); }
+        }
+        .win-anim { animation: pulse 1.5s infinite; border-color: var(--accent); }
+
+        #reset-btn {
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+            display: none;
+            margin-top: 10px;
+        }
+        #reset-btn:hover { background: rgba(255,255,255,0.1); box-shadow: none; }
+
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="card time-box full-width">
-        <div id="time">00:00</div>
-        <div id="date">加载中...</div>
-    </div>
+    <div class="game-card" id="card">
+        <h1>智能猜数仪</h1>
+        <div class="subtitle">系统已生成一个神秘数字</div>
 
-    <div class="card">
-        <div class="card-label">🌤️ 当前天气</div>
-        <div class="weather-content">
-            <div>
-                <div class="city" id="city">定位中...</div>
-                <div id="weather-text" style="color: var(--text-sub);">拉取气象数据中</div>
-            </div>
-            <div class="temp" id="temp">--°</div>
+        <div class="range-display" id="range-display">
+            [ 1 - 100 ]
         </div>
-        <div id="weather-more" style="margin-top:20px; font-size:13px; color:var(--text-sub); border-top:1px solid var(--card-border); padding-top:12px;">
-            系统已就绪
-        </div>
-    </div>
 
-    <div class="card">
-        <div class="card-label">📅 每日运势</div>
-        <div class="luck-row"><span class="luck-badge yi">宜</span> <span id="yi-text">加载中</span></div>
-        <div class="luck-row"><span class="luck-badge ji">忌</span> <span id="ji-text">加载中</span></div>
-        <div id="luck-desc" style="margin-top:20px; font-size:13px; color:var(--text-sub); border-top:1px solid var(--card-border); padding-top:12px;">
-            无论运势如何，过好当下每一刻。
+        <div class="message" id="message">请输入你的猜测</div>
+
+        <div class="input-group">
+            <input type="number" id="guess-input" placeholder="?" inputmode="numeric" autocomplete="off" autofocus>
+            <button id="submit-btn" onclick="checkGuess()">确认验证</button>
+            <button id="reset-btn" onclick="initGame()">重新开始</button>
+        </div>
+
+        <div class="stats">
+            <span>当前尝试: <b id="attempts">0</b> 次</span>
+            <span>最佳记录: <b id="best-score">--</b> 次</span>
         </div>
     </div>
 
-    <div class="card full-width">
-        <div class="card-label" style="justify-content: space-between;">
-            <span>🔥 实时热榜资讯</span>
-            <span id="news-source" style="font-weight: normal; color: #f59e0b;">📡 扫描国内节点中...</span>
-        </div>
-        <div id="news-list" class="news-grid">
-            <div style="padding: 30px; text-align: center; color: var(--text-sub); grid-column: 1 / -1;">
-                正在与云端资讯节点建立连接，请稍候...
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    const AMAP_KEY = '63d3f957d54929e51fd068d4ac3fa0db';
-
-    // 1. 时钟
-    function updateTime() {
-        const now = new Date();
-        document.getElementById('time').innerText = now.toTimeString().split(' ')[0];
-        document.getElementById('date').innerText = now.toLocaleDateString('zh-CN', {month:'long', day:'numeric', weekday:'long'});
-    }
-    setInterval(updateTime, 1000);
-    updateTime();
-
-    // 2. 天气
-    async function fetchWeather() {
-        try {
-            const ipRes = await fetch(`https://restapi.amap.com/v3/ip?key=${AMAP_KEY}`);
-            const ipData = await ipRes.json();
-            if(ipData.status === '1' && ipData.city) {
-                document.getElementById('city').innerText = ipData.city;
-                const wRes = await fetch(`https://restapi.amap.com/v3/weather/weatherInfo?key=${AMAP_KEY}&city=${ipData.adcode}`);
-                const wData = await wRes.json();
-                if(wData.lives && wData.lives.length > 0) {
-                    const l = wData.lives[0];
-                    document.getElementById('temp').innerText = l.temperature + '°';
-                    document.getElementById('weather-text').innerText = l.weather;
-                    document.getElementById('weather-more').innerText = `风向: ${l.winddirection}风 | 湿度: ${l.humidity}%`;
-                }
-            }
-        } catch (e) { }
-    }
-    setTimeout(fetchWeather, 300);
-
-    // 3. 黄历
-    function initLuck() {
-        const yis = ["专注工作", "学习充电", "深度阅读", "整理桌面", "联系老友"];
-        const jis = ["过度熬夜", "冲动消费", "久坐不动", "暴饮暴食", "情绪化"];
-        const d = new Date().getDate();
-        document.getElementById('yi-text').innerText = yis[d % yis.length];
-        document.getElementById('ji-text').innerText = jis[(d + 3) % jis.length];
-    }
-    initLuck();
-
-    // 4. 纯国内节点新闻拉取 (增加强力可选链保护)
-    async function fetchNews() {
-        const list = document.getElementById('news-list');
-        const sourceLabel = document.getElementById('news-source');
+    <script>
+        let targetNumber;
+        let minRange;
+        let maxRange;
+        let attempts;
+        let gameActive = true;
         
-        // 节点阵列：全面替换为国内稳定线路
-        const apis = [
-            { 
-                name: '知乎热榜 (国内主线)', 
-                url: 'https://api.oioweb.cn/api/common/ZhihuHot', 
-                getList: d => d?.result?.map(i => ({title: i.title, url: i.url})) 
-            },
-            { 
-                name: '百度热搜 (国内备线1)', 
-                url: 'https://api.vvhan.com/api/hotlist/baiduRD', 
-                getList: d => d?.data?.map(i => ({title: i.title, url: i.url})) 
-            },
-            { 
-                name: '微博热搜 (国内备线2)', 
-                url: 'https://tenapi.cn/v2/weibohot', 
-                getList: d => d?.data?.map(i => ({title: i.name, url: i.url})) 
+        // 获取本地存储的最佳记录
+        let bestScore = localStorage.getItem('guessNumberBestScore') || '--';
+        document.getElementById('best-score').innerText = bestScore;
+
+        const inputEl = document.getElementById('guess-input');
+        const messageEl = document.getElementById('message');
+        const rangeEl = document.getElementById('range-display');
+        const attemptsEl = document.getElementById('attempts');
+        const submitBtn = document.getElementById('submit-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const cardEl = document.getElementById('card');
+
+        // 初始化游戏
+        function initGame() {
+            targetNumber = Math.floor(Math.random() * 100) + 1;
+            minRange = 1;
+            maxRange = 100;
+            attempts = 0;
+            gameActive = true;
+
+            updateRangeDisplay();
+            attemptsEl.innerText = attempts;
+            messageEl.innerText = '请输入你的猜测';
+            messageEl.style.color = 'var(--text-main)';
+            inputEl.value = '';
+            inputEl.disabled = false;
+            
+            submitBtn.style.display = 'block';
+            resetBtn.style.display = 'none';
+            cardEl.classList.remove('win-anim');
+            
+            // 延迟一点让手机键盘有时间反应
+            setTimeout(() => inputEl.focus(), 100);
+        }
+
+        // 核心验证逻辑
+        function checkGuess() {
+            if (!gameActive) return;
+
+            const userGuess = parseInt(inputEl.value);
+
+            // 基础校验
+            if (isNaN(userGuess)) {
+                showMessage('请输入有效的数字！', 'var(--warning)');
+                return;
             }
-        ];
+            if (userGuess < 1 || userGuess > 100) {
+                showMessage('数字超出了 1 到 100 的范围！', 'var(--warning)');
+                inputEl.value = '';
+                return;
+            }
 
-        for (let api of apis) {
-            try {
-                // 每条线路给 4 秒时间
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 4000);
-                
-                const res = await fetch(api.url, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                
-                const data = await res.json();
-                const items = api.getList(data);
+            attempts++;
+            attemptsEl.innerText = attempts;
 
-                if (items && items.length > 0) {
-                    list.innerHTML = ''; 
-                    sourceLabel.innerText = `🟢 已连接: ${api.name}`;
-                    sourceLabel.style.color = "#10b981";
-                    
-                    items.slice(0, 10).forEach((item, index) => {
-                        let rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : 'rank-other';
-                        list.innerHTML += `
-                            <a href="${item.url}" target="_blank" class="news-item">
-                                <div class="rank ${rankClass}">${index + 1}</div>
-                                <div class="news-title">${item.title}</div>
-                            </a>
-                        `;
-                    });
-                    return; 
-                }
-            } catch (e) {
-                console.warn(`${api.name} 拉取失败，尝试下一个...`);
+            // 判断逻辑
+            if (userGuess === targetNumber) {
+                handleWin();
+            } else if (userGuess < targetNumber) {
+                showMessage(`太小了！目标比 ${userGuess} 大。`, 'var(--warning)');
+                if (userGuess > minRange) minRange = userGuess + 1;
+                inputEl.value = '';
+                inputEl.focus();
+            } else {
+                showMessage(`太大了！目标比 ${userGuess} 小。`, 'var(--warning)');
+                if (userGuess < maxRange) maxRange = userGuess - 1;
+                inputEl.value = '';
+                inputEl.focus();
+            }
+
+            if (gameActive) updateRangeDisplay();
+        }
+
+        function showMessage(text, color) {
+            messageEl.innerText = text;
+            messageEl.style.color = color;
+        }
+
+        function updateRangeDisplay() {
+            // 如果范围交叉了（理论上不会，以防万一）
+            if (minRange > maxRange) return;
+            rangeEl.innerText = `[ ${minRange} - ${maxRange} ]`;
+        }
+
+        function handleWin() {
+            gameActive = false;
+            showMessage(`🎉 恭喜你猜对了！答案就是 ${targetNumber}`, 'var(--accent)');
+            rangeEl.innerText = `[ 命中目标 ]`;
+            inputEl.disabled = true;
+            cardEl.classList.add('win-anim');
+            
+            submitBtn.style.display = 'none';
+            resetBtn.style.display = 'block';
+
+            // 更新最佳记录
+            if (bestScore === '--' || attempts < parseInt(bestScore)) {
+                bestScore = attempts;
+                localStorage.setItem('guessNumberBestScore', bestScore);
+                document.getElementById('best-score').innerText = bestScore;
+                setTimeout(() => alert(`太棒了！你创造了新的最佳记录：${bestScore} 次！`), 300);
             }
         }
 
-        // 终极降级
-        sourceLabel.innerText = "🔴 本地网络受限";
-        sourceLabel.style.color = "#ef4444";
-        list.style.display = "block";
-        list.innerHTML = `
-            <div style="color: var(--text-sub); margin-bottom: 15px;">
-                系统检测到当前网络环境拦截了公共资讯接口，已为您准备快捷直达通道：
-            </div>
-            <div class="fallback-container">
-                <a href="https://www.zhihu.com/hot" target="_blank" class="fallback-btn">👉 知乎热榜</a>
-                <a href="https://s.weibo.com/top/summary" target="_blank" class="fallback-btn">👉 微博热搜</a>
-                <a href="https://top.baidu.com/board" target="_blank" class="fallback-btn">👉 百度热搜</a>
-                <a href="https://www.ithome.com/" target="_blank" class="fallback-btn">👉 IT之家</a>
-            </div>
-        `;
-    }
-    fetchNews();
-</script>
+        // 监听回车键提交
+        inputEl.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // 防止手机端回车刷新页面
+                checkGuess();
+            }
+        });
 
+        // 启动游戏
+        initGame();
+
+    </script>
 </body>
 </html>
